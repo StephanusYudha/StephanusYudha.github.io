@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Monitoring Collection - BPR BKK Jateng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --bkk-blue: #004a99; --bkk-gold: #ffcc00; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .header-bank { background: var(--bkk-blue); color: white; padding: 20px; border-bottom: 5px solid var(--bkk-gold); margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .logo-bank { width: 75px; height: auto; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .card { border: none; border-radius: 12px; }
+        .btn-primary { background-color: var(--bkk-blue); border: none; }
+        #preview-foto { max-width: 100%; height: 180px; object-fit: cover; display: none; border-radius: 8px; margin-top: 10px; border: 2px solid #ddd; }
+        .img-table { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; }
+        .table-responsive { max-height: 500px; overflow-y: auto; }
+        @media (max-width: 576px) { .header-bank { flex-direction: column; text-align: center; } }
+    </style>
+</head>
+<body>
+
+<div class="header-bank shadow">
+    <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" alt="Logo BKK Jateng" class="logo-bank">
+    <div>
+        <h3 class="fw-bold mb-0">BPR BKK JATENG (PERSERODA)</h3>
+        <p class="mb-0 opacity-75">Sistem Monitoring Kinerja Collection Digital</p>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm p-4">
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-pencil-square"></i> Input Kunjungan</h5>
+                <form id="collectionForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Nasabah</label>
+                        <input type="text" id="namaNasabah" class="form-control" placeholder="Nama lengkap" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Status/Janji</label>
+                        <select id="statusKunjungan" class="form-select" required>
+                            <option value="" selected disabled>Pilih Status...</option>
+                            <option value="Janji Bayar">Janji Bayar</option>
+                            <option value="Bayar Sebagian">Bayar Sebagian</option>
+                            <option value="Titip Angsuran">Titip Angsuran</option>
+                            <option value="Tidak Bertemu">Tidak Bertemu</option>
+                            <option value="Rumah Kosong">Rumah Kosong</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Detail Solusi</label>
+                        <textarea id="detailSolusi" class="form-control" rows="2" placeholder="Rencana selanjutnya..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Hasil Kunjungan</label>
+                        <textarea id="hasilKunjungan" class="form-control" rows="2" placeholder="Kondisi di lapangan..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-danger">Foto Bukti</label>
+                        <input type="file" id="fotoKunjungan" class="form-control" accept="image/*" capture="camera" required>
+                        <img id="preview-foto">
+                    </div>
+                    <input type="hidden" id="lokasiGps">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow">KIRIM LAPORAN</button>
+                    <button type="button" onclick="hapusSemuaData()" class="btn btn-link btn-sm w-100 text-danger mt-2 text-decoration-none">Reset Data Hari Ini</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm p-4 h-100">
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="fw-bold m-0">Data Hari Ini</h5>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="cariNasabah" class="form-control" placeholder="Cari nama nasabah..." onkeyup="tampilkanData()">
+                            <button onclick="exportToExcel()" class="btn btn-success fw-bold"><i class="bi bi-file-earmark-excel"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border" id="tabelLaporan">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Foto</th>
+                                <th>Nama</th>
+                                <th>Waktu</th>
+                                <th>Status</th>
+                                <th>Hasil & Solusi</th>
+                                <th>Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyLaporan"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
+    let base64Foto = "";
+
+    window.onload = () => { getGPS(); tampilkanData(); };
+
+    function getGPS() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('lokasiGps').value = pos.coords.latitude + "," + pos.coords.longitude;
+            });
+        }
+    }
+
+    document.getElementById('fotoKunjungan').addEventListener('change', function() {
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+            base64Foto = e.target.result; 
+            document.getElementById('preview-foto').src = base64Foto;
+            document.getElementById('preview-foto').style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    document.getElementById('collectionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const jam = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+        
+        const entriBaru = {
+            foto: base64Foto,
+            nama: document.getElementById('namaNasabah').value,
+            waktu: jam,
+            status: document.getElementById('statusKunjungan').value,
+            solusi: document.getElementById('detailSolusi').value,
+            hasil: document.getElementById('hasilKunjungan').value,
+            gps: document.getElementById('lokasiGps').value
+        };
+
+        dataLaporan.unshift(entriBaru);
+        localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
+        
+        this.reset();
+        document.getElementById('preview-foto').style.display = 'none';
+        tampilkanData();
+        alert("Berhasil disimpan!");
+    });
+
+    function tampilkanData() {
+        const table = document.getElementById('tbodyLaporan');
+        const keyword = document.getElementById('cariNasabah').value.toLowerCase();
+        table.innerHTML = "";
+
+        dataLaporan.filter(item => item.nama.toLowerCase().includes(keyword)).forEach((item) => {
+            const row = table.insertRow();
+            let color = "bg-info text-dark";
+            if (item.status === "Janji Bayar") color = "bg-warning text-dark";
+            if (item.status.includes("Tidak") || item.status.includes("Kosong")) color = "bg-danger";
+            if (item.status.includes("Angsuran")) color = "bg-success";
+
+            row.insertCell(0).innerHTML = `<img src="${item.foto}" class="img-table shadow-sm" onclick="window.open(this.src)">`;
+            row.insertCell(1).innerHTML = `<strong>${item.nama}</strong>`;
+            row.insertCell(2).innerText = item.waktu;
+            row.insertCell(3).innerHTML = `<span class="badge ${color}">${item.status}</span>`;
+            row.insertCell(4).innerHTML = `<small><b>Hasil:</b> ${item.hasil}<br><b>Solusi:</b> ${item.solusi}</small>`;
+            row.insertCell(5).innerHTML = `<a href="https://www.google.com/maps?q=${item.gps}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-geo-alt"></i></a>`;
+        });
+    }
+
+    function hapusSemuaData() {
+        if(confirm("Hapus semua data hari ini?")) {
+            localStorage.removeItem('laporan_bkk');
+            dataLaporan = [];
+            tampilkanData();
+        }
+    }
+
+    function exportToExcel() {
+        const table = document.getElementById("tabelLaporan");
+        const wb = XLSX.utils.table_to_book(table, {sheet: "Monitoring"});
+        XLSX.writeFile(wb, "Laporan_BKK_Jateng.xlsx");
+    }
+</script>
+</body>
+</html>
