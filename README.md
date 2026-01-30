@@ -1,5 +1,3 @@
-# StephanusYudha.github.io
-
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -16,8 +14,9 @@
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,74,153,0.98); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         #preview-foto { max-width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-top: 10px; border: 2px solid #ddd; }
-        .img-table { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+        .img-table { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; }
         .rekap-box { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--bkk-gold); }
+        .status-sync { font-size: 0.7rem; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -29,7 +28,6 @@
         <input type="text" id="userKolektor" class="form-control mb-2 text-center" placeholder="Nama Lengkap">
         <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password Sistem">
         <button onclick="prosesLogin()" class="btn btn-primary w-100 fw-bold">LOGIN</button>
-        <p class="text-muted small mt-3">Gunakan password standar kantor</p>
     </div>
 </div>
 
@@ -49,21 +47,33 @@
                 <h5 class="fw-bold text-primary mb-3">Laporan Kunjungan</h5>
                 <form id="collectionForm">
                     <input type="text" id="namaNasabah" class="form-control mb-3" placeholder="Nama Nasabah" required>
+                    
+                    <select id="bertemuDengan" class="form-select mb-3" required>
+                        <option value="" selected disabled>Bertemu Dengan...</option>
+                        <option value="Debitur">Debitur</option>
+                        <option value="Suami / Istri">Suami / Istri</option>
+                        <option value="Keluarga">Keluarga Lain</option>
+                        <option value="Tidak Bertemu">Tidak Ada Orang</option>
+                    </select> 
+                  
                     <select id="statusKunjungan" class="form-select mb-3" required>
-                        <option value="" selected disabled>Pilih Status...</option>
+                        <option value="" selected disabled>Status Penagihan...</option>
                         <option value="Janji Bayar">Janji Bayar</option>
                         <option value="Bayar Sebagian">Bayar Sebagian</option>
                         <option value="Titip Angsuran">Titip Angsuran</option>
-                        <option value="Tidak Bertemu">Tidak Bertemu</option>
                         <option value="Rumah Kosong">Rumah Kosong</option>
                     </select>
+
                     <textarea id="hasilKunjungan" class="form-control mb-2" rows="2" placeholder="Hasil Lapangan..." required></textarea>
                     <textarea id="detailSolusi" class="form-control mb-3" rows="2" placeholder="Solusi/Rencana..." required></textarea>
+                    
                     <label class="small fw-bold text-danger">FOTO BUKTI</label>
                     <input type="file" id="fotoKunjungan" class="form-control form-control-sm mb-2" accept="image/*" capture="camera" required>
                     <img id="preview-foto" class="mx-auto d-block">
+                    
                     <input type="hidden" id="lokasiGps">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mt-3 shadow">SIMPAN DATA</button>
+                    <button type="submit" id="btnSimpan" class="btn btn-primary btn-lg w-100 fw-bold mt-3 shadow">SIMPAN & SINKRON</button>
+                    <div id="syncStatus" class="text-center status-sync text-muted"></div>
                 </form>
             </div>
         </div>
@@ -81,28 +91,24 @@
                     <button onclick="exportToExcel()" class="btn btn-success btn-sm px-3 fw-bold">DOWNLOAD EXCEL</button>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle border" id="tabelLaporan">
+                    <table class="table table-sm table-hover align-middle border">
                         <thead class="table-dark small">
                             <tr>
-                                <th>Foto</th>
-                                <th>Nasabah</th>
-                                <th>Petugas</th>
-                                <th>Status</th>
-                                <th>Detail</th>
-                                <th>Peta</th>
+                                <th>Foto</th><th>Nasabah</th><th>Petugas</th><th>Status</th><th>Detail</th><th>Peta</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyLaporan" class="small"></tbody>
                     </table>
                 </div>
-                <button onclick="hapusSemuaData()" class="btn btn-link btn-sm text-danger mt-3 text-decoration-none">Hapus Data Hari Ini</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const MASTER_PASS = "bkk123"; // PASSWORD ANDA
+    const MASTER_PASS = "bkk123";
+    const SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DI_SINI"; // GANTI INI
+    
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
     let base64Foto = "";
@@ -116,7 +122,7 @@
             localStorage.setItem('petugas_aktif', n);
             petugas = n;
             loginSukses();
-        } else { alert("Nama atau Password Salah!"); }
+        } else { alert("Akses Ditolak!"); }
     }
 
     function loginSukses() {
@@ -144,60 +150,76 @@
         reader.readAsDataURL(this.files[0]);
     });
 
-    document.getElementById('collectionForm').addEventListener('submit', function(e) {
+    // FUNGSI UTAMA: SIMPAN & KIRIM KE GOOGLE SHEETS
+    document.getElementById('collectionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        const btn = document.getElementById('btnSimpan');
+        const syncLabel = document.getElementById('syncStatus');
+        
         const entri = {
             petugas: petugas,
-            foto: base64Foto,
+            waktu: new Date().toLocaleString('id-ID'),
             nama: document.getElementById('namaNasabah').value,
-            waktu: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}),
+            bertemu: document.getElementById('bertemuDengan').value,
             status: document.getElementById('statusKunjungan').value,
-            solusi: document.getElementById('detailSolusi').value,
             hasil: document.getElementById('hasilKunjungan').value,
-            gps: document.getElementById('lokasiGps').value
+            solusi: document.getElementById('detailSolusi').value,
+            gps: document.getElementById('lokasiGps').value || "0,0",
+            foto: base64Foto
         };
+
+        // 1. Simpan Lokal (Offline Safe)
         dataLaporan.unshift(entri);
         localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
-        this.reset();
-        document.getElementById('preview-foto').style.display = 'none';
         tampilkanData();
+        
+        // 2. Kirim ke Google Sheets (Cloud Sync)
+        btn.disabled = true;
+        btn.innerText = "MENYINKRONKAN...";
+        syncLabel.innerText = "Sedang mengirim data ke server kantor...";
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Penting untuk Apps Script
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(entri)
+            });
+            syncLabel.innerHTML = "<span class='text-success'>✓ Tersinkron ke Google Sheets</span>";
+        } catch (err) {
+            syncLabel.innerHTML = "<span class='text-danger'>! Gagal Sinkron (Tersimpan Lokal)</span>";
+        }
+
+        // 3. Reset Form
+        this.reset();
+        base64Foto = "";
+        document.getElementById('preview-foto').style.display = 'none';
+        btn.disabled = false;
+        btn.innerText = "SIMPAN & SINKRON";
         alert("Data Berhasil Disimpan!");
     });
 
     function tampilkanData() {
         const table = document.getElementById('tbodyLaporan');
-        const keyword = document.getElementById('cariNasabah').value.toLowerCase();
         table.innerHTML = "";
-        
         let cBayar = 0;
+
         dataLaporan.forEach(item => {
-            if(item.status.includes("Angsuran") || item.status.includes("Sebagian")) cBayar++;
-            if (!item.nama.toLowerCase().includes(keyword)) return;
-
+            const isBayar = item.status.includes("Angsuran") || item.status.includes("Sebagian");
+            if(isBayar) cBayar++;
+            
             const row = table.insertRow();
-            let color = "bg-info text-dark";
-            if (item.status === "Janji Bayar") color = "bg-warning text-dark";
-            if (item.status.includes("Tidak") || item.status.includes("Kosong")) color = "bg-danger";
-            if (item.status.includes("Angsuran") || item.status.includes("Sebagian")) color = "bg-success";
-
             row.insertCell(0).innerHTML = `<img src="${item.foto}" class="img-table" onclick="window.open(this.src)">`;
-            row.insertCell(1).innerHTML = `<strong>${item.nama}</strong><br><small class="text-muted">${item.waktu}</small>`;
+            row.insertCell(1).innerHTML = `<strong>${item.nama}</strong><br><small>${item.waktu}</small>`;
             row.insertCell(2).innerText = item.petugas;
-            row.insertCell(3).innerHTML = `<span class="badge ${color}">${item.status}</span>`;
-            row.insertCell(4).innerHTML = `<small><b>Hasil:</b> ${item.hasil}<br><b>Solusi:</b> ${item.solusi}</small>`;
+            row.insertCell(3).innerHTML = `<span class="badge ${isBayar?'bg-success':'bg-warning text-dark'}">${item.status}</span>`;
+            row.insertCell(4).innerHTML = `<small><b>Hasil:</b> ${item.hasil}</small>`;
             row.insertCell(5).innerHTML = `<a href="https://www.google.com/maps?q=${item.gps}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-geo-alt"></i></a>`;
         });
 
         document.getElementById('countTotal').innerText = dataLaporan.length;
         document.getElementById('countBayar').innerText = cBayar;
         document.getElementById('countPending').innerText = dataLaporan.length - cBayar;
-    }
-
-    function hapusSemuaData() { if(confirm("Hapus semua data?")) { localStorage.removeItem('laporan_bkk'); dataLaporan = []; tampilkanData(); } }
-
-    function exportToExcel() {
-        const wb = XLSX.utils.table_to_book(document.getElementById("tabelLaporan"), {sheet: "Monitoring"});
-        XLSX.writeFile(wb, "Monitoring_BKK_" + petugas + ".xlsx");
     }
 </script>
 </body>
