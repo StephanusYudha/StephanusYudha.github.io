@@ -108,7 +108,7 @@
 
 <script>
    const MASTER_PASS = "bkk123";
-    const SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DI_SINI"; // GANTI DENGAN URL DEPLOY ANDA
+    const SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DI_SINI"; 
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
@@ -139,9 +139,12 @@
 
     function getGPS() {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                document.getElementById('lokasiGps').value = pos.coords.latitude + "," + pos.coords.longitude;
-            });
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    document.getElementById('lokasiGps').value = `${pos.coords.latitude},${pos.coords.longitude}`;
+                },
+                err => { console.warn("GPS Gagal dimuat"); }
+            );
         }
     }
 
@@ -149,8 +152,9 @@
         const reader = new FileReader();
         reader.onload = (e) => { 
             base64Foto = e.target.result; 
-            document.getElementById('preview-foto').src = base64Foto;
-            document.getElementById('preview-foto').style.display = 'block';
+            const preview = document.getElementById('preview-foto');
+            preview.src = base64Foto;
+            preview.style.display = 'block';
         };
         reader.readAsDataURL(this.files[0]);
     });
@@ -172,15 +176,18 @@
             foto: base64Foto
         };
 
+        // Simpan ke Lokal Dahulu
         dataLaporan.unshift(entri);
         localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
         tampilkanData();
         
+        // Proses Sinkronisasi
         btn.disabled = true;
         btn.innerText = "MENYINKRONKAN...";
-        syncLabel.innerText = "Sedang mengirim data ke server kantor...";
+        syncLabel.innerHTML = "<span class='spinner-border spinner-border-sm'></span> Sedang mengirim ke server...";
 
         try {
+            // Gunakan fetch dengan mode 'no-cors' jika script google tidak mengembalikan JSON
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -200,7 +207,6 @@
         alert("Data Berhasil Disimpan!");
     });
 
-    // FUNGSI DOWNLOAD EXCEL (SUDAH DIPERBAIKI)
     function exportToExcel() {
         if(dataLaporan.length === 0) { 
             alert("Tidak ada data untuk didownload!"); 
@@ -216,15 +222,10 @@
             'Hasil Lapangan': item.hasil,
             'Rencana Solusi': item.solusi,
             'Koordinat GPS': item.gps,
-            'Link Google Maps': `https://www.google.com/maps?q=${item.gps}`
+            'Link Peta': `https://www.google.com/maps?q=${item.gps}`
         }));
 
         const ws = XLSX.utils.json_to_sheet(dataUntukExcel);
-        const wscols = [
-            {wch: 20}, {wch: 20}, {wch: 25}, {wch: 15}, {wch: 20}, {wch: 40}, {wch: 40}, {wch: 25}, {wch: 40}
-        ];
-        ws['!cols'] = wscols;
-
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Laporan BKK");
         
@@ -234,15 +235,21 @@
 
     function tampilkanData() {
         const table = document.getElementById('tbodyLaporan');
+        const searchKeyword = document.getElementById('cariNasabah').value.toLowerCase();
         table.innerHTML = "";
         let cBayar = 0;
 
-        dataLaporan.forEach(item => {
-            const isBayar = item.status.includes("Angsuran") || item.status.includes("Sebagian");
+        // Filter data berdasarkan pencarian
+        const filteredData = dataLaporan.filter(item => 
+            item.nama.toLowerCase().includes(searchKeyword)
+        );
+
+        filteredData.forEach(item => {
+            const isBayar = item.status.toLowerCase().includes("bayar") || item.status.toLowerCase().includes("titip");
             if(isBayar) cBayar++;
             
             const row = table.insertRow();
-            row.insertCell(0).innerHTML = `<img src="${item.foto}" class="img-table" onclick="window.open(this.src)">`;
+            row.insertCell(0).innerHTML = `<img src="${item.foto || 'https://via.placeholder.com/50'}" class="img-table" onclick="window.open(this.src)">`;
             row.insertCell(1).innerHTML = `<strong>${item.nama}</strong><br><small>${item.waktu}</small>`;
             row.insertCell(2).innerText = item.petugas;
             row.insertCell(3).innerHTML = `<span class="badge ${isBayar?'bg-success':'bg-warning text-dark'}">${item.status}</span>`;
@@ -256,4 +263,73 @@
     }
 </script>
 </body>
+</html><!DOCTYPE html>
+<html>
+<head>
+
+<title> Hello from Earth</title>
+  <!--CSS cascading style sheets-->
+<!-- <style> 
+         body {
+            background-color: black;
+            color: white;
+}
+</style>   -->
+</head>
+
+<body>
+
+          <h1> welcome to HTML 101:</h1>
+          <h2> A beginners guide to coding</h2>
+         <h3> Lists </h3>
+  <ol> 
+        <li> something in here </li>
+        <li> make a second bullet point</li>
+  </ol>
+
+<ul>
+       <li> point #1 </li>
+        <li> point #2</li>
+         <li> point #3</li>
+</ul>
+<!-- <script>
+  alert("Hello world");
+</script>
+  src="test_javascripy.js"></script> -->
+<a href="http://instagram.com" target="_blank">Click this link</a>
+<a href="Untitled-2.html"> This goes to the second page</a>
+<p>
+
+   <b>Lorem ipsum dolor sit </b> amet consectetur adipisicing elit. 
+   <i>Ab aperiam minima quia quas </i> laboriosam iure cupiditate labore, 
+    assumenda laudantium sunt animi soluta minus, 
+    <u>omnis aliquid sed voluptates nihil ea dolorum.</u>
+</p>
+<h3> This is an example of element nesting</h3>
+<a href="Untitled-2.html">
+<img 
+src="C:\Users\Personal\Desktop\green_bird.jpg" 
+width="500" 
+height="100"
+
+>
+<br>
+</a>
+
+<p>
+    <b> <i> <u>
+    Lorem, ipsum dolor sit amet consectetur adipisicing elit. 
+    Rem eveniet est delectus sequi beatae in? Reiciendis laudantium, 
+    asperiores ratione sapiente facere tempore suscipit! Saepe autem animi quo,
+     impedit maxime quidem.
+     </u> </i> </b>
+</p>
+<hr>
+<div>
+    This has no special meaning.
+</div>
+</body>
 </html>
+
+
+</head>
