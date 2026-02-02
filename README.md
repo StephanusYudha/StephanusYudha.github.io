@@ -92,11 +92,16 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle border">
-                        <thead class="table-dark small">
-                            <tr>
-                                <th>Foto</th><th>Nasabah</th><th>Petugas</th><th>Status</th><th>Detail</th><th>Peta</th>
-                            </tr>
-                        </thead>
+                  <thead class="table-dark small">
+    <tr>
+        <th>Foto</th>
+        <th>Nasabah</th>
+        <th>Petugas</th>
+        <th>Status</th>
+        <th>Detail</th>
+        <th>Peta</th>
+        <th>Aksi</th> </tr>
+</thead>
                         <tbody id="tbodyLaporan" class="small"></tbody>
                     </table>
                 </div>
@@ -223,28 +228,39 @@
     });
 
     function tampilkanData() {
-        const table = document.getElementById('tbodyLaporan');
-        const search = document.getElementById('cariNasabah').value.toLowerCase();
-        table.innerHTML = "";
-        let cBayar = 0;
+    const table = document.getElementById('tbodyLaporan');
+    const search = document.getElementById('cariNasabah').value.toLowerCase();
+    table.innerHTML = "";
+    let cBayar = 0;
 
-        dataLaporan.filter(i => i.nama.toLowerCase().includes(search)).forEach(item => {
-            const isBayar = item.status.toLowerCase().match(/bayar|titip/);
-            if(isBayar) cBayar++;
-            
-            const row = table.insertRow();
-            row.insertCell(0).innerHTML = `<img src="${item.foto}" class="img-table" onclick="window.open(this.src)">`;
-            row.insertCell(1).innerHTML = `<strong>${item.nama}</strong><br><small>${item.waktu}</small>`;
-            row.insertCell(2).innerText = item.petugas;
-            row.insertCell(3).innerHTML = `<span class="badge ${isBayar?'bg-success':'bg-warning text-dark'}">${item.status}</span>`;
-            row.insertCell(4).innerHTML = `<small>${item.hasil}</small>`;
-            row.insertCell(5).innerHTML = `<a href="https://www.google.com/maps?q=${item.gps}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-geo-alt"></i></a>`;
-        });
+    dataLaporan.forEach((item, index) => {
+        if (!item.nama.toLowerCase().includes(search)) return;
 
-        document.getElementById('countTotal').innerText = dataLaporan.length;
-        document.getElementById('countBayar').innerText = cBayar;
-        document.getElementById('countPending').innerText = dataLaporan.length - cBayar;
-    }
+        const isBayar = item.status.toLowerCase().match(/bayar|titip/);
+        if(isBayar) cBayar++;
+        
+        const row = table.insertRow();
+        
+        // Isi data tiap kolom
+        row.insertCell(0).innerHTML = `<img src="${item.foto || 'https://via.placeholder.com/50'}" class="img-table" onclick="window.open(this.src)">`;
+        row.insertCell(1).innerHTML = `<strong>${item.nama}</strong><br><small>${item.waktu}</small>`;
+        row.insertCell(2).innerText = item.petugas;
+        row.insertCell(3).innerHTML = `<span class="badge ${isBayar?'bg-success':'bg-warning text-dark'}">${item.status}</span>`;
+        row.insertCell(4).innerHTML = `<small>${item.hasil}</small>`;
+        row.insertCell(5).innerHTML = `<a href="https://www.google.com/maps?q=${item.gps}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-geo-alt"></i></a>`;
+        
+        // KOLOM HAPUS (Pastikan baris ini ada)
+        row.insertCell(6).innerHTML = `
+            <button onclick="hapusData(${index})" class="btn btn-sm btn-danger">
+                <i class="bi bi-trash"></i>
+            </button>`;
+    });
+
+    // Update Angka Rekap
+    document.getElementById('countTotal').innerText = dataLaporan.length;
+    document.getElementById('countBayar').innerText = cBayar;
+    document.getElementById('countPending').innerText = dataLaporan.length - cBayar;
+}
 
     function exportToExcel() {
         if(dataLaporan.length === 0) return alert("Data kosong!");
@@ -253,6 +269,18 @@
         XLSX.utils.book_append_sheet(wb, ws, "Laporan");
         XLSX.writeFile(wb, `Laporan_BKK_${petugas}.xlsx`);
     }
+  function hapusData(index) {
+    if (confirm("Apakah Anda yakin ingin menghapus data ini dari perangkat? \n(Catatan: Data yang sudah tersinkron ke Google Sheets tidak akan terhapus)")) {
+        // Hapus dari array berdasarkan index
+        dataLaporan.splice(index, 1);
+        
+        // Update LocalStorage
+        localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
+        
+        // Refresh tabel
+        tampilkanData();
+    }
+}
 </script>
 </body>
 </html>
