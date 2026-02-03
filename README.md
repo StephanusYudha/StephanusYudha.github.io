@@ -108,8 +108,12 @@
                     <select id="bertemuDengan" class="form-select mb-3" required>
                         <option value="" selected disabled>Bertemu Dengan...</option>
                         <option value="Debitur">Debitur</option>
-                        <option value="Suami / Istri">Suami / Istri</option>
-                        <option value="Keluarga">Keluarga</option>
+                        <option value="Suami">Suami</option>
+                        <option value="Suami">Istri</option>
+                        <option value="Anak">Anak</option>
+                        <option value="Orang Tua">Orang Tua</option>
+                        <option value="Tetangga">Tetangga</option>
+                        <option value="Saudara">Saudara</option>
                         <option value="Tidak Bertemu">Tidak Ada Orang</option>
                     </select>
                     <select id="statusKunjungan" class="form-select mb-3" required>
@@ -228,24 +232,50 @@
         return String(val).trim();
     }
 
-    function tampilkanMasterExcel() {
-        const tbody = document.getElementById('tbodyMasterExcel');
-        const search = document.getElementById('searchMaster').value.toLowerCase();
-        const filterTgl = document.getElementById('filterTglMaster').value;
-        const data = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+    // --- LOGIKA MASTER EXCEL DENGAN FILTER YANG DISEMPURNAKAN ---
+function tampilkanMasterExcel() {
+    const tbody = document.getElementById('tbodyMasterExcel');
+    
+    // Ambil nilai dari input filter
+    const searchKeyword = document.getElementById('searchMaster').value.toLowerCase();
+    const filterTgl = document.getElementById('filterTglMaster').value;
+    
+    // Ambil data dari LocalStorage
+    const data = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+    
+    // Proses Filter (Kombinasi Teks DAN Tanggal)
+    const filteredData = data.filter(r => {
+        const matchText = r.nama.toLowerCase().includes(searchKeyword) || 
+                          r.alamat.toLowerCase().includes(searchKeyword);
         
-        const filtered = data.filter(r => {
-            const matchText = r.nama.toLowerCase().includes(search) || r.alamat.toLowerCase().includes(search);
-            const matchDate = filterTgl ? r.tanggal === filterTgl : true;
-            return matchText && matchDate;
-        });
+        // Jika filter tanggal diisi, maka harus cocok. Jika kosong, anggap semua cocok.
+        const matchDate = filterTgl ? r.tanggal === filterTgl : true;
+        
+        return matchText && matchDate;
+    });
 
-        tbody.innerHTML = filtered.length ? "" : "<tr><td colspan='6' class='text-center text-muted'>Data tidak ditemukan</td></tr>";
-        filtered.forEach(r => {
-            const row = tbody.insertRow();
-            row.innerHTML = `<td>${r.nama}</td><td>${r.alamat}</td><td class="text-end">${Number(r.os_nominal).toLocaleString('id-ID')}</td><td>${r.telp}</td><td class="text-end">${Number(r.tagihan).toLocaleString('id-ID')}</td><td class="text-center"><span class="badge bg-info text-dark">${r.tanggal}</span></td>`;
-        });
+    // Render Tabel
+    tbody.innerHTML = "";
+    
+    if (filteredData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Data tidak ditemukan atau filter tidak cocok.</td></tr>`;
+        return;
     }
+
+    filteredData.forEach(r => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${r.nama}</td>
+            <td>${r.alamat}</td>
+            <td class="text-end">${Number(r.os_nominal).toLocaleString('id-ID')}</td>
+            <td class="text-center">${r.telp}</td>
+            <td class="text-end">${Number(r.tagihan).toLocaleString('id-ID')}</td>
+            <td class="text-center">
+                <span class="badge bg-info text-dark border">${r.tanggal}</span>
+            </td>
+        `;
+    });
+}
 
     function tampilkanTabelRencana() {
         const tgl = document.getElementById('tglRencana').value;
