@@ -43,7 +43,13 @@
 
 <div class="container-fluid">
     <div class="card p-3 mb-4 border-success">
-        <h6 class="fw-bold text-success mb-3"><i class="bi bi-database-check"></i> Data Master Rencana Kunjungan</h6>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-success mb-0"><i class="bi bi-database-check"></i> Data Master Rencana Kunjungan</h6>
+            <button onclick="tarikMasterCloud()" id="btnTarikCloud" class="btn btn-sm btn-success fw-bold">
+                <i class="bi bi-cloud-download"></i> TARIK DATA PUSAT
+            </button>
+        </div>
+        
         <div class="row g-2 mb-3">
             <div class="col-md-3">
                 <label class="small fw-bold">Import Excel:</label>
@@ -62,11 +68,12 @@
                 <button onclick="hapusSemuaRencana()" class="btn btn-sm btn-danger w-100 fw-bold">HAPUS MASTER</button>
             </div>
         </div>
+
         <div class="table-responsive sticky-table border rounded">
             <table class="table table-sm table-striped mb-0">
                 <thead class="table-success small sticky-top">
                     <tr>
-                        <th>Nama (Klik pntuk Pilih)</th>
+                        <th>Nama (Klik)</th>
                         <th>Alamat</th>
                         <th>OS</th>
                         <th>Telp</th>
@@ -112,7 +119,7 @@
                         <input type="date" id="tglJanjiBayar" class="form-control form-control-sm">
                     </div>
 
-                    <textarea id="hasilKunjungan" class="form-control mb-2" rows="2" placeholder="Hasil..." required></textarea>
+                    <textarea id="hasilKunjungan" class="form-control mb-2" rows="2" placeholder="Hasil Kunjungan..." required></textarea>
                     <textarea id="detailSolusi" class="form-control mb-3" rows="2" placeholder="Rencana RTL..." required></textarea>
                     
                     <input type="file" id="fotoKunjungan" class="form-control form-control-sm mb-2" accept="image/*" capture="camera" required>
@@ -152,7 +159,8 @@
 
 <script>
     const MASTER_PASS = "bkk123";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaAcS2POFGniTxFI-9c8PDSEgR0QQdivw8jqWjy_DI4kY40YGjZXTLKaWU3mGx8dRE/exec";
+    // GANTI URL DI BAWAH DENGAN URL WEB APP ANDA
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiYSw8DvKG1SC_GRQ6c1hTDwTp0OKpff28-nNt_hBb9fxzBZQ7w50HvElkLnteYW45/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
@@ -166,7 +174,36 @@
         updateDatalist();
     };
 
-    // AUTH
+    // --- SINKRONISASI CLOUD ---
+    async function tarikMasterCloud() {
+        const btn = document.getElementById('btnTarikCloud');
+        const originalText = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const dataCloud = await response.json();
+
+            if (Array.isArray(dataCloud) && dataCloud.length > 0) {
+                localStorage.setItem('rencana_kunjungan', JSON.stringify(dataCloud));
+                tampilkanMasterExcel();
+                updateDatalist();
+                alert("Berhasil menarik " + dataCloud.length + " data dari Cloud!");
+            } else {
+                alert("Data Cloud kosong atau Sheet 'Master' tidak ditemukan.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Gagal koneksi ke Cloud. Periksa internet atau URL Script.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    // --- AUTH ---
     function prosesLogin() {
         const n = document.getElementById('userKolektor').value;
         const p = document.getElementById('passKolektor').value;
@@ -189,7 +226,7 @@
         }
     }
 
-    // EXCEL LOGIC
+    // --- EXCEL & MASTER LOGIC ---
     document.getElementById('importExcel').addEventListener('change', function(e) {
         const file = e.target.files[0];
         const reader = new FileReader();
@@ -213,7 +250,7 @@
             localStorage.setItem('rencana_kunjungan', JSON.stringify(rencana));
             tampilkanMasterExcel();
             updateDatalist();
-            alert("Data Master Berhasil Diupdate!");
+            alert("Master Lokal Diupdate!");
         };
         reader.readAsArrayBuffer(file);
     });
@@ -256,7 +293,6 @@
         });
     }
 
-    // AUTOFILL
     function updateDatalist() {
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         const dl = document.getElementById('listNasabah');
@@ -272,22 +308,20 @@
         const nama = document.getElementById('namaNasabah').value;
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         const ketemu = master.find(u => u.nama.toLowerCase() === nama.toLowerCase());
-        document.getElementById('alamatNasabah').value = ketemu ? ketemu.alamat : "";
+        document.getElementById('alamatNasabah').value = ketemu ? (ketemu.alamat || ketemu.ALAMAT) : "";
     }
 
     function pilihNasabah(nama) {
         document.getElementById('namaNasabah').value = nama;
         autoFillAlamat();
         window.scrollTo({ top: document.getElementById('collectionForm').offsetTop - 20, behavior: 'smooth' });
-        document.getElementById('namaNasabah').classList.add('is-valid');
-        setTimeout(() => document.getElementById('namaNasabah').classList.remove('is-valid'), 1000);
     }
 
     function cekStatusJanji() {
         document.getElementById('areaJanjiBayar').style.display = (document.getElementById('statusKunjungan').value === "Janji Bayar") ? "block" : "none";
     }
 
-    // IMAGE
+    // --- FOTO LOGIC ---
     document.getElementById('fotoKunjungan').addEventListener('change', function() {
         const reader = new FileReader();
         reader.onload = e => {
@@ -296,7 +330,7 @@
                 const canvas = document.createElement('canvas');
                 canvas.width = 600; canvas.height = img.height * (600 / img.width);
                 canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                base64Foto = canvas.toDataURL('image/jpeg', 0.7);
+                base64Foto = canvas.toDataURL('image/jpeg', 0.6);
                 document.getElementById('preview-foto').src = base64Foto;
                 document.getElementById('preview-foto').style.display = 'block';
             };
@@ -304,7 +338,7 @@
         reader.readAsDataURL(this.files[0]);
     });
 
-    // SUBMIT
+    // --- FORM SUBMIT ---
     document.getElementById('collectionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSimpan');
@@ -329,13 +363,13 @@
         btn.disabled = true; btn.innerText = "SINKRON...";
         try {
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entri) });
-            document.getElementById('syncStatus').innerHTML = "<span class='text-success fw-bold'>✓ Berhasil Sinkron Cloud</span>";
+            document.getElementById('syncStatus').innerHTML = "<span class='text-success fw-bold'>✓ Sinkron Berhasil</span>";
             this.reset();
             base64Foto = "";
             document.getElementById('preview-foto').style.display = 'none';
             document.getElementById('areaJanjiBayar').style.display = 'none';
         } catch (err) {
-            document.getElementById('syncStatus').innerHTML = "<span class='text-danger'>! Cloud Gagal (Tersimpan Lokal)</span>";
+            document.getElementById('syncStatus').innerHTML = "<span class='text-danger'>! Gagal Cloud (Tersimpan Lokal)</span>";
         }
         btn.disabled = false; btn.innerText = "SIMPAN & SINKRON";
     });
@@ -362,13 +396,13 @@
         document.getElementById('countPending').innerText = dataLaporan.length - cb;
     }
 
-    function hapusSemuaRencana() { if(confirm("Hapus Master?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
-    function hapusData(i) { if(confirm("Hapus?")) { dataLaporan.splice(i,1); localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan)); tampilkanData(); } }
+    function hapusSemuaRencana() { if(confirm("Hapus Semua Master?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
+    function hapusData(i) { if(confirm("Hapus data riwayat ini?")) { dataLaporan.splice(i,1); localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan)); tampilkanData(); } }
     function exportToExcel() {
-        const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Sistem'})));
+        const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Cloud'})));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-        XLSX.writeFile(wb, `Laporan_Kolektor.xlsx`);
+        XLSX.writeFile(wb, `Laporan_Kolektor_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 </body>
