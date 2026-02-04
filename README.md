@@ -72,16 +72,15 @@
         <div class="table-responsive sticky-table border rounded">
             <table class="table table-sm table-striped mb-0">
                 <thead class="table-success small sticky-top">
-                    <tr>
-                        <th>Nama (Klik)</th>
-                        <th>Alamat</th>
-                        <th>OS</th>
-                        <th>Telp</th>
-                        <th>Tagihan</th>
-                        <th>Tgl</th>
-                        <th>WA</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th style="width: 25%">Nama</th>
+        <th style="width: 30%">Alamat</th>
+        <th style="width: 15%" class="text-end">OS</th>
+        <th style="width: 15%" class="text-end">Tagihan</th>
+        <th style="width: 10%" class="text-center">Tgl</th>
+        <th style="width: 5%" class="text-center">WA</th>
+    </tr>
+</thead>
                 <tbody id="tbodyMasterExcel" class="small"></tbody>
             </table>
         </div>
@@ -160,7 +159,7 @@
 <script>
     const MASTER_PASS = "bkk123";
     // GANTI URL DI BAWAH DENGAN URL WEB APP ANDA
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiYSw8DvKG1SC_GRQ6c1hTDwTp0OKpff28-nNt_hBb9fxzBZQ7w50HvElkLnteYW45/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB0FVMQ6ORqq9JHI2Cu_KOhNPk9nxkmRYRYiMmNYa1JpNznmXT_iBVzOSnHE5miVo0/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
