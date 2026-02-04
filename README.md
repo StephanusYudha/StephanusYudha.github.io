@@ -69,22 +69,20 @@
         </div>
 
         <div class="table-responsive sticky-table border rounded">
-            <table class="table table-sm table-striped mb-0">
-                <thead class="table-success small sticky-top">
-                    <tr>
-                        <th>Nama (Klik)</th>
-                        <th>Alamat</th>
-                        <th>OS</th>
-                        <th>Telp</th>
-                        <th>Tagihan</th>
-                        <th>Tgl</th>
-                        <th>WA</th>
-                    </tr>
-                </thead>
-                <tbody id="tbodyMasterExcel" class="small"></tbody>
-            </table>
-        </div>
-    </div>
+    <table class="table table-sm table-striped table-fixed mb-0"> <thead class="table-success small sticky-top">
+            <tr>
+                <th style="width: 20%">Nama</th>
+                <th style="width: 20%">Alamat</th>
+                <th style="width: 15%" class="text-end">OS</th>
+                <th style="width: 15%" class="text-end">Tagihan</th>
+                <th style="width: 15%" class="text-center">Tgl</th>
+                <th style="width: 10%" class="text-center">Telp</th>
+                <th style="width: 5%" class="text-center">WA</th>
+            </tr>
+        </thead>
+        <tbody id="tbodyMasterExcel" class="small"></tbody>
+    </table>
+</div>
 
     <div class="row">
         <div class="col-lg-4">
@@ -267,45 +265,51 @@
     
     tbody.innerHTML = "";
     
-    // Filter Data
     const filtered = data.filter(i => {
-        const matchSearch = i.nama.toLowerCase().includes(search) || i.alamat.toLowerCase().includes(search);
+        const matchSearch = (i.nama || "").toLowerCase().includes(search) || (i.alamat || "").toLowerCase().includes(search);
         const matchDate = filterTgl ? i.tanggal === filterTgl : true;
         return matchSearch && matchDate;
     });
 
     if(filtered.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='6' class='text-center py-4 text-muted small'>Tidak ada data rencana kunjungan</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='7' class='text-center py-4 text-muted small'>Tidak ada data</td></tr>";
         return;
     }
 
-    // Render Baris Tabel
     filtered.forEach(item => {
         const row = tbody.insertRow();
-        const waLink = item.telp.toString().replace(/^0/, '62').replace(/\D/g, '');
-        
-        // Format mata uang IDR
-        const osFormatted = Number(item.os).toLocaleString('id-ID');
-        const tagihanFormatted = Number(item.tagihan).toLocaleString('id-ID');
+        const waLink = item.telp ? item.telp.toString().replace(/^0/, '62').replace(/\D/g, '') : "";
 
-        row.innerHTML = `
-            <td>
-                <button type="button" class="btn-nama" onclick="pilihNasabah('${item.nama.replace(/'/g, "\\'")}')">
-                    ${item.nama}
-                </button>
-            </td>
-            <td><div class="alamat-truncate">${item.alamat}</div></td>
-            <td class="text-end amount-font">${osFormatted}</td>
-            <td class="text-end amount-font"><span class="tagihan-highlight">${tagihanFormatted}</span></td>
-            <td class="text-center">
-                <span class="badge rounded-pill bg-light text-dark border" style="font-size: 0.7rem;">${item.tanggal}</span>
-            </td>
-            <td class="text-center">
-                <a href="https://wa.me/${waLink}" target="_blank" class="btn btn-sm btn-outline-success border-0">
-                    <i class="bi bi-whatsapp"></i>
-                </a>
-            </td>
-        `;
+        // 1. Nama
+        row.insertCell(0).innerHTML = `<button type="button" class="btn-nama" onclick="pilihNasabah('${item.nama.replace(/'/g, "\\'")}')">${item.nama}</button>`;
+        
+        // 2. Alamat
+        row.insertCell(1).innerHTML = `<div class="alamat-truncate" title="${item.alamat}">${item.alamat || "-"}</div>`;
+        
+        // 3. OS
+        const cOS = row.insertCell(2);
+        cOS.className = "text-end amount-font";
+        cOS.innerText = Number(item.os || 0).toLocaleString('id-ID');
+        
+        // 4. Tagihan
+        const cTag = row.insertCell(3);
+        cTag.className = "text-end amount-font text-danger";
+        cTag.innerText = Number(item.tagihan || 0).toLocaleString('id-ID');
+        
+        // 5. Tgl
+        const cTgl = row.insertCell(4);
+        cTgl.className = "text-center";
+        cTgl.innerHTML = `<span class="badge bg-light text-dark border" style="font-size: 0.65rem;">${item.tanggal || "-"}</span>`;
+
+        // 6. Telp (KOLOM YANG SEBELUMNYA HILANG)
+        const cTelp = row.insertCell(5);
+        cTelp.className = "text-center small";
+        cTelp.innerText = item.telp || "-";
+        
+        // 7. WA
+        const cWA = row.insertCell(6);
+        cWA.className = "text-center";
+        cWA.innerHTML = `<a href="https://wa.me/${waLink}" target="_blank" class="text-success fs-6"><i class="bi bi-whatsapp"></i></a>`;
     });
 }
 
