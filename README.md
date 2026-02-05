@@ -99,7 +99,12 @@
                     <select id="bertemuDengan" class="form-select mb-3" required>
                         <option value="" disabled selected>Bertemu Dengan...</option>
                         <option value="Debitur">Debitur</option>
-                        <option value="Keluarga">Keluarga</option>
+                        <option value="Pasangan">Pasangan</option>
+                        <option value="Orang Tua">Orang Tua</option>
+                        <option value="Anak">Anak</option>
+                        <option value="Saudara">Saudara</option>
+                        <option value="Tetangga">Tetangga</option>
+                        <option value="Lainnya">Lainnya</option>
                         <option value="Tidak Ada Orang">Tidak Ada Orang</option>
                     </select>
 
