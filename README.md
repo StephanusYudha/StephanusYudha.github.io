@@ -1,120 +1,170 @@
+peugas.tml
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Collection - BPR BKK Jateng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BKK Mobile Collection - Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        :root { --bkk-blue: #004a99; --bkk-gold: #ffcc00; }
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-        .header-bank { background: var(--bkk-blue); color: white; padding: 15px; border-bottom: 5px solid var(--bkk-gold); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; position: relative; }
-        .logo-bank { width: 50px; background: white; padding: 5px; border-radius: 8px; }
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,74,153,0.98); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .sticky-table { max-height: 450px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
-        .table-fixed { table-layout: fixed; width: 100%; margin-bottom: 0; }
-        .table-fixed th, .table-fixed td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
-        .amount-font { font-family: 'Courier New', monospace; font-weight: bold; }
-        .alamat-truncate { font-size: 0.75rem; color: #666; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .img-table { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; }
-        #preview-foto { max-width: 100%; height: 200px; object-fit: cover; display: none; border-radius: 8px; margin-top: 10px; border: 2px solid #ddd; }
-        .rekap-box { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--bkk-gold); }
-        .page-section { display: none; }
+        :root { 
+            --bkk-blue: #003366; 
+            --bkk-blue-light: #0056b3;
+            --bkk-gold: #FFD700; 
+            --bg-light: #F1F5F9; 
+        }
+        
+        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; padding-bottom: 90px; }
+
+        /* Login */
+        #loginOverlay { 
+            position: fixed; inset: 0; background: linear-gradient(135deg, var(--bkk-blue) 0%, #001a33 100%); 
+            z-index: 9999; display: flex; align-items: center; justify-content: center; 
+        }
+        .login-box { 
+            background: white; width: 85%; max-width: 400px; border-radius: 20px; padding: 35px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; 
+        }
+
+        /* Dashboard */
+        .header-app { 
+            background: var(--bkk-blue); color: white; padding: 15px 20px; 
+            border-bottom: 3px solid var(--bkk-gold); position: sticky; top: 0; z-index: 1000;
+        }
+        .stats-gradient {
+            background: linear-gradient(135deg, var(--bkk-blue) 0%, var(--bkk-blue-light) 100%);
+            color: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 20px rgba(0,51,102,0.2);
+        }
+
+        /* Cards */
+        .card-custom { 
+            background: white; border-radius: 15px; border: none; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        .card-custom:active { transform: scale(0.97); }
+
+        /* Form */
+        .btn-bkk { 
+            background: var(--bkk-blue); color: white; border: none; 
+            border-radius: 12px; padding: 15px; font-weight: 700; width: 100%; 
+        }
+
+        /* Bottom Nav */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; background: white; 
+            display: flex; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .nav-item { flex: 1; text-align: center; padding: 12px 0; color: #94A3B8; font-size: 0.7rem; font-weight: 600; }
+        .nav-item i { font-size: 1.5rem; display: block; }
+        .nav-item.active { color: var(--bkk-blue); }
+
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <div class="card p-4 text-center shadow-lg" style="max-width: 350px; width: 90%;">
-        <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" width="70" class="mx-auto mb-3">
-        <h4 class="fw-bold">Akses Kolektor</h4>
-        <input type="text" id="userKolektor" class="form-control mb-2 text-center" placeholder="Nama Lengkap">
-        <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password">
-        <button onclick="prosesLogin()" class="btn btn-primary w-100 fw-bold">LOGIN</button>
+    <div class="login-box">
+        <h4 class="fw-bold mb-1" style="color: var(--bkk-blue)">BKK MOBILE</h4>
+        <p class="text-muted small mb-4">Internal Collection System</p>
+        <select id="selectPetugas" class="form-select mb-3 p-3 rounded-3"></select>
+        <input type="password" id="inputPin" class="form-control mb-4 p-3 rounded-3 text-center" placeholder="PIN Keamanan" inputmode="numeric">
+        <button onclick="handleLogin()" class="btn-bkk">MASUK</button>
     </div>
 </div>
 
-<div id="mainApp" style="display:none;">
-    <div class="header-bank">
-        <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" class="logo-bank">
+<div id="appContainer" style="display:none;">
+    <div class="header-app d-flex justify-content-between align-items-center">
         <div>
-            <h5 class="fw-bold mb-0">BPR BKK JATENG</h5>
-            <span id="labelPetugas" class="badge bg-warning text-dark">Petugas: -</span>
+            <small class="d-block opacity-75">BPR BKK JATENG</small>
+            <span id="userNameDisp" class="fw-bold fs-5 text-uppercase">Petugas</span>
         </div>
-        <button onclick="logout()" class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2"><i class="bi bi-power"></i></button>
+        <button onclick="handleLogout()" class="btn btn-sm btn-outline-light rounded-pill">Keluar</button>
     </div>
 
-    <div id="pageRencana" class="container-fluid page-section">
-        <div class="card p-3 mb-4 border-success shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-bold text-success mb-0"><i class="bi bi-calendar-check"></i> Rencana Kunjungan</h6>
-                <button onclick="tarikMasterCloud()" id="btnTarikCloud" class="btn btn-sm btn-success fw-bold"><i class="bi bi-cloud-download"></i> TARIK DATA</button>
-            </div>
-            <div class="table-responsive sticky-table">
-                <table class="table table-sm table-striped table-fixed">
-                    <thead class="table-success small sticky-top">
-                        <tr>
-                            <th style="width: 45%">Nasabah/Alamat</th>
-                            <th style="width: 35%" class="text-end">Tagihan</th>
-                            <th style="width: 20%" class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbodyMasterExcel" class="small"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="pageForm" class="container-fluid page-section">
-        <div class="row">
-            <div class="col-lg-5">
-                <div class="card p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-primary mb-0">Laporan Lapangan</h5>
-                        <button onclick="bukaHalaman('pageRencana')" class="btn btn-sm btn-secondary">Kembali</button>
+    <div class="container mt-3">
+        <div id="pageHome" class="page active">
+            <div class="stats-gradient mb-4 text-center">
+                <small class="opacity-75 d-block">Total Setoran Hari Ini</small>
+                <h1 id="totalSetoran" class="fw-bold mb-3">Rp 0</h1>
+                <div class="row border-top border-white border-opacity-25 pt-3">
+                    <div class="col-6 border-end border-white border-opacity-25">
+                        <small class="opacity-75 d-block">Target</small>
+                        <h4 id="countTarget" class="fw-bold m-0">0</h4>
                     </div>
-                    <form id="collectionForm">
-                        <input type="text" id="namaNasabah" class="form-control mb-2 fw-bold" readonly>
-                        <textarea id="alamatNasabah" class="form-control mb-3 bg-light" rows="2" readonly></textarea>
+                    <div class="col-6">
+                        <small class="opacity-75 d-block">Laporan</small>
+                        <h4 id="countDone" class="fw-bold m-0">0</h4>
+                    </div>
+                </div>
+            </div>
 
-                        <label class="small fw-bold">Bertemu Dengan:</label>
-                        <select id="bertemuDengan" class="form-select mb-3" required>
-                            <option value="" disabled selected>Pilih...</option>
-                            <option value="Debitur">Debitur</option>
-                            <option value="Pasangan">Pasangan</option>
-                            <option value="Orang Tua">Orang Tua</option>
-                            <option value="Anak">Anak</option>
-                            <option value="Saudara">Saudara</option>
-                            <option value="Tetangga">Tetangga</option>
-                            <option value="Tidak Ada Orang">Tidak Ada Orang</option>
-                        </select>
+            <div class="row g-3">
+                <div class="col-6" onclick="navigateTo('pageTugas', 'navTugas')">
+                    <div class="card-custom p-4 text-center">
+                        <i class="bi bi-list-stars fs-1 text-primary mb-2"></i>
+                        <span class="d-block fw-bold small">Tugas Saya</span>
+                    </div>
+                </div>
+                <div class="col-6" onclick="navigateTo('pageAdmin', 'navAdmin')">
+                    <div class="card-custom p-4 text-center">
+                        <i class="bi bi-clock-history fs-1 text-success mb-2"></i>
+                        <span class="d-block fw-bold small">Riwayat</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <label class="small fw-bold">Status Kunjungan:</label>
-                        <select id="statusKunjungan" class="form-select mb-3" required onchange="cekStatusJanji()">
-                            <option value="" disabled selected>Pilih...</option>
-                            <option value="Janji Bayar">Janji Bayar</option>
-                            <option value="Bayar Sebagian">Bayar Sebagian</option>
+        <div id="pageTugas" class="page">
+            <h6 class="fw-bold mb-3"><i class="bi bi-geo-fill"></i> Rencana Kunjungan</h6>
+            <div id="listTugas"></div>
+        </div>
+
+        <div id="pageForm" class="page">
+            <div class="card-custom p-4">
+                <h5 class="fw-bold mb-4 text-primary" id="labelNasabah">Form Laporan</h5>
+                <form id="formKoleksi">
+                    <input type="hidden" id="inpNasabah">
+                    <div class="mb-3">
+                        <label class="small fw-bold">Status Kunjungan</label>
+                        <select id="statusKunjungan" class="form-select p-3" onchange="cekStatus()" required>
                             <option value="Titip Angsuran">Titip Angsuran</option>
+                            <option value="Bayar Sebagian">Bayar Sebagian</option>
+                            <option value="Janji Bayar">Janji Bayar</option>
                             <option value="Rumah Kosong">Rumah Kosong</option>
                         </select>
+                    </div>
 
-                        <div id="areaNominal" class="mb-3 p-3 border border-primary rounded shadow-sm bg-light" style="display: none;">
-                            <div id="boxTglJanji" class="mb-2">
-                                <label class="small fw-bold text-danger">TANGGAL JANJI BAYAR:</label>
-                                <input type="date" id="tglJanjiBayar" class="form-control form-control-sm">
-                            </div>
-                            <div id="boxNominal">
-                                <label class="small fw-bold text-primary">NOMINAL (Rp):</label>
-                                <input type="text" id="nominalDisplay" class="form-control fw-bold text-primary" placeholder="Rp 0" onkeyup="formatRupiah(this)">
-                                <input type="hidden" id="nominalAsli">
-                            </div>
-                        </div>
+                     <div class="col-6">
+                        <label class="small fw-bold text-muted">Bertemu</label>
+                        <select id="bertemuDengan" class="form-select py-2">
+                            <option value="Debitur">Debitur</option>
+                            <option value="Pasangan">Pasangan</option>
+                            <option value="Keluarga">Keluarga</option>
+                            <option value="Tetangga">Tetangga</option>
+                        </select>
+                    </div>
+                </div>
 
-                        <label class="small fw-bold">Detail Usaha & Masalah:</label>
-                        <select id="usahaDebitur" class="form-select mb-2" required>
-                            <option value="" disabled selected>Usaha Debitur ...</option>
-                            <option value="Perdagangan">Perdagangan</option>
+                 <div id="areaNominal" class="p-3 border rounded bg-light mb-3 shadow-sm">
+                    <div id="boxTglJanji">
+                        <label class="small fw-bold text-danger">Tanggal Janji Bayar:</label>
+                        <input type="date" id="tglJanjiBayar" class="form-control mb-2">
+                    </div>
+                    <label class="small fw-bold text-primary">Nominal Pembayaran (Rp):</label>
+                    <input type="text" id="nominalDisplay" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
+                    <input type="hidden" id="nominalAsli">
+                </div>
+
+                <label class="small fw-bold">Jenis Usaha:</label>
+                <select id="usahaDebitur" class="form-select mb-3" required>
+                    <option value="" disabled selected>Pilih Usaha...</option>
+                   <option value="Perdagangan">Perdagangan</option>
                             <option value="Pertanian dan Perkebunan">Pertanian dan Perkebunan</option>
                             <option value="Peternakan">Peternakan</option>
                             <option value="Jasa">Jasa</option>
@@ -129,9 +179,9 @@
                             <option value="Pariwisata dan Hiburan">Pariwisata dan Hiburan</option>
                             <option value="Pendidikan dan kesehatan">Pendidikan dan kesehatan</option>
                             <option value="Energi dan Lingkungan">Energi dan Lingkungan</option>
-                        </select>
-
-                        <select id="penyebab" class="form-select mb-2" required>
+                </select>
+              
+              <select id="penyebab" class="form-select mb-2" required>
                             <option value="" disabled selected>Penyebab Tidak Bayar ...</option>
                             <option value="Karakter/Itikad Bayar Lemah">Karakter/Itikad Bayar Lemah</option>
                             <option value="Penggunaan Dana Tidak Sesuai">Penggunaan Dana Tidak Sesuai</option>
@@ -167,218 +217,232 @@
                             <option value="Sakit Berat">Debitur Sakit Berat/Meninggal</option>
                             <option value="Sengketa Agunan">Agunan Dalam Sengketa/Belum Balik Nama</option>
                         </select>
-                        
-                        <label class="small fw-bold">Rencana RTL / Hasil:</label>
-                        <textarea id="hasilKunjungan" class="form-control mb-3" rows="2" placeholder="Tuliskan solusi..." required></textarea>
 
-                        <input type="file" id="fotoKunjungan" class="form-control form-control-sm mb-2" accept="image/*" capture="camera" required>
-                        <img id="preview-foto" class="mx-auto d-block mb-3">
-                        
-                        <input type="hidden" id="lokasiGps">
-                        <button type="submit" id="btnSimpan" class="btn btn-primary btn-lg w-100 fw-bold">SIMPAN & SINKRON</button>
-                        <div id="syncStatus" class="text-center mt-2 small"></div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-lg-7">
-                <div class="rekap-box d-flex justify-content-around text-center shadow-sm">
-                    <div><small>Total Laporan</small><h4 id="countTotal" class="fw-bold">0</h4></div>
-                    <div class="text-success"><small>Ada Uang</small><h4 id="countBayar" class="fw-bold">0</h4></div>
-                </div>
-                <div class="card p-3">
-                    <input type="text" id="cariLaporan" class="form-control mb-3" placeholder="Cari Riwayat..." onkeyup="tampilkanData()">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover border">
-                            <thead class="table-dark small"><tr><th>Foto</th><th>Detail</th><th>Status</th><th>Hapus</th></tr></thead>
-                            <tbody id="tbodyLaporan" class="small"></tbody>
-                        </table>
+                    <div class="mb-4">
+                        <label class="small fw-bold">Foto Bukti / Lokasi</label>
+                        <input type="file" id="inpFile" class="form-control" accept="image/*" capture="camera" required>
                     </div>
-                </div>
+
+                    <button type="submit" id="btnSubmit" class="btn-bkk shadow-lg">KIRIM DATA</button>
+                    <button type="button" onclick="navigateTo('pageTugas', 'navTugas')" class="btn btn-link w-100 mt-2 text-muted text-decoration-none">Batal</button>
+                </form>
             </div>
+        </div>
+
+        <div id="pageAdmin" class="page">
+            <div class="d-flex justify-content-between mb-3 align-items-center">
+                <h6 class="fw-bold m-0">Data Terkirim</h6>
+                <button onclick="loadCloudHistory()" class="btn btn-sm btn-primary">Refresh</button>
+            </div>
+            <div id="cloudHistoryList"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="navHome" onclick="navigateTo('pageHome', 'navHome')">
+            <i class="bi bi-house-door-fill"></i>Beranda
+        </div>
+        <div class="nav-item" id="navTugas" onclick="navigateTo('pageTugas', 'navTugas')">
+            <i class="bi bi-clipboard2-data-fill"></i>Tugas
+        </div>
+        <div class="nav-item" id="navAdmin" onclick="navigateTo('pageAdmin', 'navAdmin')">
+            <i class="bi bi-cloud-check-fill"></i>Riwayat
         </div>
     </div>
 </div>
 
+  
+  
+  
 <script>
-    const MASTER_PASS = "bkk123";
-    // PASTIKAN URL INI ADALAH URL DARI HASIL 'NEW DEPLOYMENT' TERBARU
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwEm7F2xyF9Cqp-XvsXpdW8JEZMVgHQaCizPTJ5_z9cxxjgKzwwuCeTPpBgUZqUei7/exec"; 
-
-    let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
-    let petugas = localStorage.getItem('petugas_aktif') || "";
-    let base64Foto = "";
+    // --- KONFIGURASI ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjm7J_BAxjoZ5WK6LoRU4NVZOiUq5su-TBxZe5r5kDh4tQz12A3J3lDIVjnVGeiZV8/exec";
+    let activeUser = localStorage.getItem('bkk_user') || "";
+    let photoBase64 = "";
 
     window.onload = () => { 
-        if(petugas) loginSukses(); 
-        getGPS(); 
+        if(activeUser) showMainApp(); 
+        syncDatabase(); 
     };
 
-    function bukaHalaman(id) {
-        document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
-        document.getElementById(id).style.display = 'block';
-        if(id === 'pageRencana') tampilkanMasterExcel();
-        if(id === 'pageForm') tampilkanData();
+    // --- LOGIKA DATA ---
+    async function syncDatabase() {
+        try {
+            const [pRes, rRes] = await Promise.all([
+                fetch(SCRIPT_URL + "?action=getPetugas").then(r => r.json()),
+                fetch(SCRIPT_URL + "?action=getRencana").then(r => r.json())
+            ]);
+            localStorage.setItem('db_petugas', JSON.stringify(pRes.petugas));
+            localStorage.setItem('db_rencana', JSON.stringify(rRes.rencana));
+            renderPetugasSelect();
+            if(activeUser) loadCloudHistory(); // Load awal untuk update dashboard
+        } catch(e) { console.warn("Offline Mode"); }
+    }
+
+    function renderPetugasSelect() {
+        const db = JSON.parse(localStorage.getItem('db_petugas')) || [];
+        const el = document.getElementById('selectPetugas');
+        el.innerHTML = '<option disabled selected>-- Pilih Nama Petugas --</option>';
+        db.forEach(p => el.innerHTML += `<option value="${p.nama}">${p.nama}</option>`);
+    }
+
+    function handleLogin() {
+        const name = document.getElementById('selectPetugas').value;
+        const pin = document.getElementById('inputPin').value;
+        const db = JSON.parse(localStorage.getItem('db_petugas')) || [];
+        const user = db.find(u => u.nama === name && u.pin.toString() === pin);
+        if(user) { 
+            activeUser = name; 
+            localStorage.setItem('bkk_user', name); 
+            showMainApp(); 
+            loadCloudHistory();
+        } else { alert("PIN Salah!"); }
+    }
+
+    function showMainApp() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+        document.getElementById('userNameDisp').innerText = activeUser;
+    }
+
+    // --- DASHBOARD REKAP ---
+    function updateDashboard(riwayat) {
+        const dbRencana = JSON.parse(localStorage.getItem('db_rencana')) || [];
+        const myTasks = dbRencana.filter(r => r.petugas === activeUser);
+        document.getElementById('countTarget').innerText = myTasks.length;
+
+        let totalUang = 0;
+        let countDone = 0;
+        const today = new Date().toLocaleDateString('id-ID');
+
+        riwayat.forEach(h => {
+            if (h.petugas === activeUser && h.waktu.includes(today)) {
+                totalUang += parseInt(h.nominal || 0);
+                countDone++;
+            }
+        });
+
+        document.getElementById('countDone').innerText = countDone;
+        document.getElementById('totalSetoran').innerText = 'Rp ' + totalUang.toLocaleString('id-ID');
+    }
+
+    // --- FORM LOGIC ---
+    function navigateTo(pId, nId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pId).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(nId).classList.add('active');
+        if(pId === 'pageTugas') renderTasks();
     }
 
     function formatRupiah(el) {
-        let val = el.value.replace(/\D/g, "");
-        document.getElementById('nominalAsli').value = val;
-        el.value = val ? "Rp " + Number(val).toLocaleString('id-ID') : "";
+        let val = el.value.replace(/[^0-9]/g, '');
+        el.value = val ? 'Rp ' + parseInt(val).toLocaleString('id-ID') : '';
     }
 
-    function cekStatusJanji() {
+    function cekStatus() {
         const s = document.getElementById('statusKunjungan').value;
-        const area = document.getElementById('areaNominal');
-        const boxTgl = document.getElementById('boxTglJanji');
-        if (["Janji Bayar", "Bayar Sebagian", "Titip Angsuran"].includes(s)) {
-            area.style.display = "block";
-            boxTgl.style.display = (s === "Janji Bayar") ? "block" : "none";
-        } else { area.style.display = "none"; }
+        document.getElementById('boxNominal').style.display = (s === 'Rumah Kosong' || s === 'Janji Bayar') ? 'none' : 'block';
     }
 
-    async function tarikMasterCloud() {
-        const btn = document.getElementById('btnTarikCloud');
-        btn.disabled = true; btn.innerHTML = "Loading...";
-        try {
-            const res = await fetch(SCRIPT_URL);
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                localStorage.setItem('rencana_kunjungan', JSON.stringify(data));
-                tampilkanMasterExcel();
-                alert("Data Master Berhasil Diperbarui!");
-            }
-        } catch (e) { alert("Gagal mengambil data! Pastikan Script URL benar."); }
-        finally { btn.disabled = false; btn.innerHTML = "TARIK DATA"; }
-    }
-
-    document.getElementById('collectionForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnSimpan');
-        
-        const entri = {
-            waktu: new Date().toLocaleString('id-ID'),
-            petugas: petugas,
-            nama: document.getElementById('namaNasabah').value,
-            alamat: document.getElementById('alamatNasabah').value,
-            bertemu: document.getElementById('bertemuDengan').value,
-            status: document.getElementById('statusKunjungan').value,
-            janji_bayar: document.getElementById('tglJanjiBayar').value || "-",
-            nominal: document.getElementById('nominalAsli').value || "0",
-            usaha: document.getElementById('usahaDebitur').value,
-            penyebab: document.getElementById('penyebab').value,
-            kendala: document.getElementById('kendala').value,
-            hasil: document.getElementById('hasilKunjungan').value,
-            gps: document.getElementById('lokasiGps').value || "0,0",
-            foto: base64Foto
-        };
-
-        // Simpan ke HP dulu
-        dataLaporan.unshift(entri);
-        localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
-        tampilkanData();
-
-        btn.disabled = true; btn.innerText = "MENGIRIM...";
-        try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {'Content-Type': 'text/plain'},
-                body: JSON.stringify(entri)
-            });
-            document.getElementById('syncStatus').innerHTML = "<span class='text-success fw-bold'>✓ Berhasil Terkirim!</span>";
-            this.reset();
-            document.getElementById('areaNominal').style.display = 'none';
-            document.getElementById('preview-foto').style.display = 'none';
-            base64Foto = "";
-            setTimeout(() => bukaHalaman('pageRencana'), 1500);
-        } catch (err) { 
-            alert("Data tersimpan di HP, tapi gagal kirim ke Sheet!"); 
-        } finally {
-            btn.disabled = false; btn.innerText = "SIMPAN & SINKRON";
-        }
-    });
-
-    function tampilkanData() {
-        const table = document.getElementById('tbodyLaporan');
-        if(!table) return;
-        table.innerHTML = ""; let cb = 0;
-        dataLaporan.forEach((item, i) => {
-            const isB = item.status.match(/Bayar|Titip/); if(isB) cb++;
-            const nomText = item.nominal > 0 ? `<br><b class="text-primary small">Rp ${Number(item.nominal).toLocaleString('id-ID')}</b>` : "";
-            const row = table.insertRow();
-            row.innerHTML = `<td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
-                             <td><b>${item.nama}</b>${nomText}<br><small class="text-muted" style="font-size:0.6rem">${item.waktu}</small></td>
-                             <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
-                             <td><button onclick="hapusData(${i})" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></td>`;
-        });
-        document.getElementById('countTotal').innerText = dataLaporan.length;
-        document.getElementById('countBayar').innerText = cb;
-    }
-
-    function tampilkanMasterExcel() {
-        const tbody = document.getElementById('tbodyMasterExcel');
-        const data = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
-        tbody.innerHTML = "";
-        data.forEach(item => {
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>
-                    <div class="fw-bold text-primary">${item.nama}</div>
-                    <div class="alamat-truncate">${item.alamat || "-"}</div>
-                </td>
-                <td class="text-end text-danger amount-font">
-                    ${Number(item.tagihan||0).toLocaleString('id-ID')}
-                </td>
-                <td class="text-center">
-                    <button onclick="pilihKeForm('${item.nama}', '${item.alamat}')" class="btn btn-sm btn-primary">PILIH</button>
-                </td>
-            `;
-        });
-    }
-
-    function pilihKeForm(nama, alamat) {
-        document.getElementById('namaNasabah').value = nama;
-        document.getElementById('alamatNasabah').value = alamat;
-        bukaHalaman('pageForm');
-    }
-
-    function prosesLogin() { 
-        const n = document.getElementById('userKolektor').value;
-        const p = document.getElementById('passKolektor').value;
-        if (n && p === MASTER_PASS) { 
-            localStorage.setItem('petugas_aktif', n); 
-            petugas = n; 
-            loginSukses(); 
-        } else alert("Login Gagal!");
-    }
-
-    function loginSukses() { 
-        document.getElementById('loginOverlay').style.display='none'; 
-        document.getElementById('mainApp').style.display='block';
-        document.getElementById('labelPetugas').innerText="Petugas: "+petugas;
-        bukaHalaman('pageRencana');
-    }
-
-    function logout() { localStorage.removeItem('petugas_aktif'); location.reload(); }
-    function getGPS() { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(p => document.getElementById('lokasiGps').value=`${p.coords.latitude},${p.coords.longitude}`); }
-    function hapusData(i) { if(confirm("Hapus?")) { dataLaporan.splice(i,1); localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan)); tampilkanData(); } }
-
-    document.getElementById('fotoKunjungan').addEventListener('change', function() {
+    document.getElementById('inpFile').onchange = function(e) {
         const reader = new FileReader();
-        reader.onload = e => {
-            const img = new Image(); img.src = e.target.result;
-            img.onload = () => {
-                const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d');
-                cvs.width = 600; cvs.height = img.height * (600/img.width);
-                ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
-                base64Foto = cvs.toDataURL('image/jpeg', 0.6);
-                document.getElementById('preview-foto').src = base64Foto;
-                document.getElementById('preview-foto').style.display='block';
-            };
+        reader.onload = function(ev) {
+            const img = new Image();
+            img.src = ev.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const scale = 600 / img.width;
+                canvas.width = 600; canvas.height = img.height * scale;
+                canvas.getContext('2d').drawImage(img, 0, 0, 600, canvas.height);
+                photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            }
         };
-        reader.readAsDataURL(this.files[0]);
-    });
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    document.getElementById('formKoleksi').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true; btn.innerText = "Mengunci GPS & Mengirim...";
+
+        let koordinat = "0,0";
+        try {
+            const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 5000}));
+            koordinat = `${pos.coords.latitude},${pos.coords.longitude}`;
+        } catch(err) { console.warn("GPS failed"); }
+
+        const data = {
+            petugas: activeUser,
+            nama: document.getElementById('inpNasabah').value,
+            status: document.getElementById('statusKunjungan').value,
+            nominal: document.getElementById('nominalDisplay').value.replace(/[^0-9]/g, '') || 0,
+            waktu: new Date().toLocaleString('id-ID'),
+            foto: photoBase64,
+            lokasi: koordinat
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            alert("Laporan Terkirim!"); 
+            location.reload();
+        } catch(err) {
+            alert("Gagal Kirim ke Awan. Cek Sinyal!");
+            btn.disabled = false; btn.innerText = "COBA LAGI";
+        }
+    };
+
+    function renderTasks() {
+        const db = JSON.parse(localStorage.getItem('db_rencana')) || [];
+        const el = document.getElementById('listTugas');
+        el.innerHTML = "";
+        const myTasks = db.filter(r => r.petugas === activeUser);
+        myTasks.forEach(t => {
+            el.innerHTML += `
+                <div class="card-custom p-3 mb-2 d-flex justify-content-between align-items-center" onclick="openForm('${t.nama}')">
+                    <div><div class="fw-bold">${t.nama}</div><small class="text-muted">${t.alamat}</small></div>
+                    <i class="bi bi-chevron-right text-primary"></i>
+                </div>`;
+        });
+    }
+
+    function openForm(nama) { 
+        document.getElementById('inpNasabah').value = nama; 
+        document.getElementById('labelNasabah').innerText = nama;
+        navigateTo('pageForm', 'navTugas'); 
+    }
+
+    async function loadCloudHistory() {
+        const el = document.getElementById('cloudHistoryList');
+        el.innerHTML = '<p class="text-center p-4 small text-muted">Sinkronisasi...</p>';
+        try {
+            const res = await fetch(SCRIPT_URL + "?action=getRiwayat").then(r => r.json());
+            el.innerHTML = "";
+            updateDashboard(res.riwayat);
+            res.riwayat.forEach(h => {
+                const mapBtn = h.lokasi !== "0,0" ? `<a href="https://www.google.com/maps?q=${h.lokasi}" target="_blank" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:0.7rem">GPS</a>` : '';
+                el.innerHTML += `
+                    <div class="card-custom mb-3 overflow-hidden">
+                        <div class="row g-0">
+                            <div class="col-4"><img src="${h.foto}" class="img-fluid h-100 w-100" style="object-fit:cover;min-height:90px"></div>
+                            <div class="col-8 p-3">
+                                <div class="d-flex justify-content-between">
+                                    <span class="small fw-bold">${h.nama}</span>
+                                    <small style="font-size:0.6rem">${h.waktu.split(' ')[0]}</small>
+                                </div>
+                                <div class="badge bg-light text-dark mb-2" style="font-size:0.6rem">${h.status}</div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-success small">Rp${Number(h.nominal).toLocaleString('id-ID')}</span>
+                                    ${mapBtn}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        } catch(e) { el.innerHTML = '<p class="text-center p-4">Koneksi Sibuk.</p>'; }
+    }
+
+    function handleLogout() { localStorage.removeItem('bkk_user'); location.reload(); }
 </script>
 </body>
 </html>
