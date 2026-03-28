@@ -1,133 +1,127 @@
-
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BKK Mobile Collection - Pro</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Amore - Enterprise System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
     <style>
-        :root { 
-            --bkk-blue: #003366; 
-            --bkk-blue-light: #0056b3;
-            --bkk-gold: #FFD700; 
-            --bg-light: #F1F5F9; 
-        }
+        :root { --bkk-blue: #003366; --bkk-gold: #FFD700; --bkk-light: #f1f5f9; --bkk-success: #198754; }
+        body { background: var(--bkk-light); font-family: 'Inter', sans-serif; padding-bottom: 90px; overflow-x: hidden; }
         
-        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; padding-bottom: 90px; }
-
-        /* Login Area */
-        #loginOverlay { 
-            position: fixed; inset: 0; background: linear-gradient(135deg, var(--bkk-blue) 0%, #001a33 100%); 
-            z-index: 9999; display: flex; align-items: center; justify-content: center; 
-        }
-        .login-box { 
-            background: white; width: 85%; max-width: 400px; border-radius: 20px; padding: 35px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; 
-        }
-
-        /* Header & Cards */
         .header-app { 
-            background: var(--bkk-blue); color: white; padding: 15px 20px; 
-            border-bottom: 3px solid var(--bkk-gold); position: sticky; top: 0; z-index: 1000;
+            background: linear-gradient(135deg, var(--bkk-blue) 0%, #004a99 100%); 
+            color: white; padding: 30px 20px 70px; 
+            border-bottom: 5px solid var(--bkk-gold); 
+            border-radius: 0 0 35px 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .stats-gradient {
-            background: linear-gradient(135deg, var(--bkk-blue) 0%, var(--bkk-blue-light) 100%);
-            color: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 20px rgba(0,51,102,0.2);
+        .stats-card { 
+            background: white; border-radius: 20px; padding: 22px; 
+            margin: -45px 15px 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            border: 1px solid rgba(0,0,0,0.05);
         }
-        .card-custom { 
-            background: white; border-radius: 15px; border: none; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.2s;
-        }
-        .card-custom:active { transform: scale(0.97); }
 
-        /* Bottom Navigation */
+        .section { display: none; animation: slideUp 0.4s ease-out; }
+        .section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-control, .form-select { border-radius: 10px; padding: 12px; border: 1px solid #e2e8f0; font-size: 0.95rem; }
+        .preview-box { 
+            width: 100%; height: 200px; background: #f8fafc; 
+            border: 2px dashed #cbd5e1; border-radius: 18px; 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; cursor: pointer;
+        }
+        .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+
         .bottom-nav { 
-            position: fixed; bottom: 0; left: 0; right: 0; background: white; 
-            display: flex; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000;
+            position: fixed; bottom: 0; width: 100%; 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            display: flex; padding: 12px 0; border-top: 1px solid #e2e8f0; 
+            z-index: 1000;
         }
-        .nav-item { flex: 1; text-align: center; padding: 12px 0; color: #94A3B8; font-size: 0.7rem; font-weight: 600; text-decoration: none; cursor: pointer;}
-        .nav-item i { font-size: 1.5rem; display: block; }
-        .nav-item.active { color: var(--bkk-blue); }
+        .nav-link { flex: 1; text-align: center; color: #64748b; text-decoration: none; font-size: 0.7rem; font-weight: 700; }
+        .nav-link.active { color: var(--bkk-blue); }
+        .nav-link i { font-size: 1.5rem; display: block; }
 
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .loading-spinner { font-size: 0.8rem; color: #666; text-align: center; padding: 20px; }
+        #loader { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+            z-index: 11000; flex-direction: column; align-items: center; justify-content: center; 
+            color: white; backdrop-filter: blur(8px); 
+        }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h4 class="fw-bold mb-1" style="color: var(--bkk-blue)">BKK MOBILE</h4>
-        <p class="text-muted small mb-4">Internal Collection System</p>
-        <select id="selectPetugas" class="form-select mb-3 p-3 rounded-3">
-            <option disabled selected>Memuat Data Petugas...</option>
-        </select>
-        <input type="password" id="inputPin" class="form-control mb-4 p-3 rounded-3 text-center" placeholder="PIN Keamanan" inputmode="numeric">
-        <button onclick="handleLogin()" id="btnLogin" class="btn btn-primary w-100 p-3 rounded-3 fw-bold shadow">MASUK</button>
+<div id="loader">
+    <div class="spinner-grow text-warning mb-3"></div>
+    <h6 id="loaderText" class="fw-bold">Memproses Data...</h6>
+</div>
+
+<div id="pageLogin" style="position:fixed; inset:0; background:var(--bkk-light); z-index:10000; display:flex; align-items:center;">
+    <div class="container p-4">
+        <div class="text-center mb-5">
+            <div class="bg-primary d-inline-block p-4 rounded-5 mb-3 shadow"><i class="bi bi-bank2 text-white fs-1"></i></div>
+            <h2 class="fw-bold m-0" style="color: var(--bkk-blue);">AMORE</h2>
+            <p class="text-muted small">Enterprise Reporting v2.5</p>
+        </div>
+        <form id="formLogin" class="bg-white p-4 rounded-4 shadow-sm border">
+            <input type="text" id="user" class="form-control mb-3" placeholder="Username" required>
+            <input type="password" id="pass" class="form-control mb-4" placeholder="Password" required>
+            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3">LOG IN SYSTEM</button>
+        </form>
     </div>
 </div>
 
-<div id="appContainer" style="display:none;">
-    <div class="header-app d-flex justify-content-between align-items-center">
-        <div>
-            <small class="d-block opacity-75">BPR BKK JATENG</small>
-            <span id="userNameDisp" class="fw-bold fs-5 text-uppercase">-</span>
-        </div>
-        <button onclick="handleLogout()" class="btn btn-sm btn-outline-light rounded-pill px-3">Keluar</button>
+<div class="header-app d-flex justify-content-between align-items-start">
+    <div><h5 class="fw-bold mb-0">AMORE SYSTEM</h5><small id="userGreet" class="opacity-75">Halo, Petugas</small></div>
+    <div class="bg-white rounded-circle p-2 shadow-sm text-center" style="width: 40px; height: 40px;" onclick="logout()">
+        <i class="bi bi-power text-danger fs-5"></i>
     </div>
+</div>
 
-    <div class="container mt-3">
-        <div id="pageHome" class="page active">
-            <div class="stats-gradient mb-4 text-center">
-                <small class="opacity-75 d-block">Total Setoran Hari Ini</small>
-                <h1 id="totalSetoran" class="fw-bold mb-3">Rp 0</h1>
-                <div class="row border-top border-white border-opacity-25 pt-3">
-                    <div class="col-6 border-end border-white border-opacity-25">
-                        <small class="opacity-75 d-block">Target Hari Ini</small>
-                        <h4 id="countTarget" class="fw-bold m-0">0</h4>
-                    </div>
-                    <div class="col-6">
-                        <small class="opacity-75 d-block">Realisasi</small>
-                        <h4 id="countDone" class="fw-bold m-0">0</h4>
-                    </div>
+<div id="pageHome" class="section active">
+    <div class="stats-card">
+        <small class="text-muted fw-bold">REALISASI SETORAN HARI INI</small>
+        <h2 id="dashSetoran" class="fw-bold text-primary my-1">Rp 0</h2>
+        <div class="progress mt-3" style="height: 10px; border-radius: 10px;">
+            <div id="barTarget" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
+        </div>
+        <div class="text-end mt-1"><small id="txtPersen" class="fw-bold text-success">0% dari Target</small></div>
+    </div>
+    
+    <div class="container mt-4 px-4">
+        <h6 class="fw-bold text-muted mb-3">LAYANAN UTAMA</h6>
+        <div class="row g-3">
+            <div class="col-6" onclick="showPage('pageColl')">
+                <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-primary">
+                    <i class="bi bi-wallet2 fs-1 text-primary mb-2"></i><span class="small fw-bold">KOLEKSI</span>
                 </div>
             </div>
-
-            <div class="row g-3">
-                <div class="col-6" onclick="navigateTo('pageTugas', 'navTugas')">
-                    <div class="card-custom p-4 text-center">
-                        <i class="bi bi-list-stars fs-1 text-primary mb-2"></i>
-                        <span class="d-block fw-bold small">Tugas Saya</span>
-                    </div>
-                </div>
-                <div class="col-6" onclick="navigateTo('pageAdmin', 'navAdmin')">
-                    <div class="card-custom p-4 text-center">
-                        <i class="bi bi-clock-history fs-1 text-success mb-2"></i>
-                        <span class="d-block fw-bold small">Riwayat</span>
-                    </div>
+            <div class="col-6" onclick="showPage('pageMkt')">
+                <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-success">
+                    <i class="bi bi-person-plus fs-1 text-success mb-2"></i><span class="small fw-bold">MARKETING</span>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div id="pageTugas" class="page">
-            <h6 class="fw-bold mb-3"><i class="bi bi-geo-fill text-danger"></i> Rencana Kunjungan</h6>
-            <div id="listTugas" class="loading-spinner">Mencari tugas...</div>
+<div id="pageColl" class="section p-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex align-items-center mb-4 text-primary" onclick="showPage('pageHome')">
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Laporan Koleksi</h5>
         </div>
-
-        <div id="pageForm" class="page">
-            <div class="card-custom p-4 mb-4 shadow-sm">
-                <h5 class="fw-bold text-primary mb-4" id="labelNasabah">Input Kunjungan</h5>
-                <form id="formKoleksi">
-                    <input type="hidden" id="inpNasabah">
-                    
-                    <div class="row g-2 mb-3">
+        <form id="formCollection">
+            <div class="mb-3">
+                <label class="small fw-bold text-muted">NAMA NASABAH</label>
+                <input type="text" id="n_coll" class="form-control" list="dataNasabah" placeholder="Cari nasabah..." required>
+                <datalist id="dataNasabah"></datalist>
+            </div>
+            <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="small fw-bold text-muted">Status</label>
                             <select id="statusKunjungan" class="form-select py-2" onchange="cekStatus()" required>
@@ -221,236 +215,378 @@
                         </select>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="small fw-bold mb-1">Foto Bukti</label>
-                        <input type="file" id="inpFile" class="form-control" accept="image/*" capture="camera" required>
-                    </div>
-
-                    <button type="submit" id="btnSubmit" class="btn btn-primary w-100 p-3 fw-bold rounded-3 shadow">KIRIM LAPORAN</button>
-                    <button type="button" onclick="navigateTo('pageTugas', 'navTugas')" class="btn btn-link w-100 mt-2 text-muted text-decoration-none">Batal</button>
-                </form>
+            <div class="mb-4">
+                <div class="preview-box" id="box_coll" onclick="document.getElementById('f_coll').click()">
+                    <i class="bi bi-camera-fill fs-1 text-muted"></i>
+                </div>
+                <input type="file" id="f_coll" class="d-none" accept="image/*" capture="camera" onchange="handleFile(this, 'box_coll')">
             </div>
-        </div>
-
-        <div id="pageAdmin" class="page">
-            <div class="d-flex justify-content-between mb-3 align-items-center">
-                <h6 class="fw-bold m-0">Data Terkirim (Cloud)</h6>
-                <button onclick="loadCloudHistory()" class="btn btn-sm btn-outline-primary px-3">Refresh</button>
-            </div>
-            <div id="cloudHistoryList"></div>
-        </div>
-    </div>
-
-    <div class="bottom-nav">
-        <div class="nav-item active" id="navHome" onclick="navigateTo('pageHome', 'navHome')">
-            <i class="bi bi-house-door-fill"></i>Beranda
-        </div>
-        <div class="nav-item" id="navTugas" onclick="navigateTo('pageTugas', 'navTugas')">
-            <i class="bi bi-clipboard2-check-fill"></i>Tugas
-        </div>
-        <div class="nav-item" id="navAdmin" onclick="navigateTo('pageAdmin', 'navAdmin')">
-            <i class="bi bi-cloud-check-fill"></i>Riwayat
-        </div>
+            <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow">KIRIM KOLEKSI</button>
+        </form>
     </div>
 </div>
 
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwp1pJkFJsJrHXBkCjALrtg-nvmRvq0yDaFRPUZCVkRqhE8EsX3Om6iXROPVVuxa3A/exec";
-    let activeUser = localStorage.getItem('bkk_user') || "";
-    let photoBase64 = "";
+<div id="pageMkt" class="section p-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex align-items-center mb-4 text-success" onclick="showPage('pageHome')">
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Prospek Funding</h5>
+        </div>
+        <form id="formMarketing">
+            <div class="mb-3">
 
-    window.onload = async () => { 
-        if(activeUser) showMainApp(); 
-        await syncDatabase(); 
+
+
+<label class="small fw-bold">NAMA CALON NASABAH</label>
+
+
+
+<input type="text" id="n_mkt" class="form-control" placeholder="Nama lengkap" required>
+
+
+
+</div>
+
+
+
+<div class="mb-3">
+
+
+
+<label class="small fw-bold">NO. WHATSAPP (WA)</label>
+
+
+
+<input type="tel" id="wa_mkt" class="form-control" placeholder="0812..." required>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="p-3 border rounded bg-light mb-3">
+
+
+
+<label class="small fw-bold mb-2 text-muted"><i class="bi bi-geo-alt-fill"></i> ALAMAT LENGKAP</label>
+
+
+
+<textarea id="alamat_mkt" class="form-control mb-2" rows="2" placeholder="Jalan / RT / RW" required></textarea>
+
+
+
+<div class="row g-2">
+
+
+
+<div class="col-6"><input type="text" id="kel_mkt" class="form-control form-control-sm" placeholder="Kelurahan" required></div>
+
+
+
+<div class="col-6"><input type="text" id="kota_mkt" class="form-control form-control-sm" placeholder="Kota/Kab" required></div>
+
+
+
+<div class="col-12"><input type="text" id="prov_mkt" class="form-control form-control-sm" value="Provinsi" required></div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="mb-3">
+
+
+
+<label class="small fw-bold">MINAT TABUNGAN</label>
+
+
+
+<select id="tab_mkt" class="form-select select-prospek">
+
+
+
+<option value="Tidak Berminat">--- Tidak Berminat ---</option>
+
+
+
+<option value="Tabungan Umum">Tabungan Umum</option>
+
+
+
+<option value="Tabungan Arisan">Tabungan Arisan</option>
+
+
+
+<option value="Tabungan Pelajar">Tabungan Pelajar</option>
+
+
+
+<option value="Tabungan Berjangka">Tabungan Berjangka</option>
+
+
+
+</select>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="mb-3">
+
+
+
+<label class="small fw-bold">MINAT DEPOSITO</label>
+
+
+
+<select id="dep_mkt" class="form-select select-prospek">
+
+
+
+<option value="Tidak Berminat">--- Tidak Berminat ---</option>
+
+
+
+<option value="Deposito 1-3 Bln">Deposito 1-3 Bulan</option>
+
+
+
+<option value="Deposito 6 Bln">Deposito 6 Bulan</option>
+
+
+
+<option value="Deposito 12 Bln">Deposito 12 Bulan</option>
+
+
+
+</select>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div id="areaNominalMkt" class="p-3 border rounded bg-light mb-3" style="display:none;">
+
+
+
+<label class="small fw-bold text-success">RENCANA NOMINAL (Rp):</label>
+
+
+
+<input type="text" id="nom_mkt_display" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
+
+
+
+</div>
+            </div>
+
+            <div id="areaNominalMkt" class="p-3 border rounded bg-light mb-3" style="display:none;">
+                <label class="small fw-bold text-success">RENCANA NOMINAL (Rp):</label>
+                <input type="text" id="nom_mkt_display" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
+            </div>
+
+            <div class="mb-4">
+                <div class="preview-box" id="box_mkt" onclick="document.getElementById('f_mkt').click()">
+                    <i class="bi bi-camera-fill fs-1 text-success"></i>
+                </div>
+                <input type="file" id="f_mkt" class="d-none" accept="image/*" capture="camera" onchange="handleFile(this, 'box_mkt')">
+            </div>
+            <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow">SIMPAN PROSPEK</button>
+        </form>
+    </div>
+</div>
+
+<div id="pageHistory" class="section p-3">
+    <h6 class="fw-bold text-muted mb-3">RIWAYAT AKTIVITAS HARI INI</h6>
+    <div id="logList" class="bg-white rounded-4 shadow-sm p-3">
+        <div class="text-center py-5 text-muted small">Belum ada aktivitas.</div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <a href="javascript:void(0)" id="nav_pageHome" class="nav-link active" onclick="showPage('pageHome')"><i class="bi bi-house-door"></i>HOME</a>
+    <a href="javascript:void(0)" id="nav_pageColl" class="nav-link" onclick="showPage('pageColl')"><i class="bi bi-wallet2"></i>KOLEKSI</a>
+    <a href="javascript:void(0)" id="nav_pageMkt" class="nav-link" onclick="showPage('pageMkt')"><i class="bi bi-person-plus"></i>MARKETING</a>
+    <a href="javascript:void(0)" id="nav_pageHistory" class="nav-link" onclick="showPage('pageHistory')"><i class="bi bi-clock-history"></i>RIWAYAT</a>
+</div>
+
+<script>
+    const WEB_APP_URL = "GANTI_DENGAN_URL_DEPLOY_APPS_SCRIPT_ANDA"; 
+    let currentPhoto = "";
+
+    window.onload = () => {
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('pageLogin').style.display = 'none';
+            const u = JSON.parse(localStorage.getItem('userData'));
+            document.getElementById('userGreet').innerText = `Halo, ${u.nama}`;
+            syncData();
+        }
+
+        // Event listener untuk logic dinamis Koleksi
+        const sColl = document.getElementById('s_coll');
+        if(sColl) {
+            sColl.addEventListener('change', function() {
+                document.getElementById('boxJanji').style.display = this.value === "Janji Bayar" ? 'block' : 'none';
+                document.getElementById('boxNominal').style.display = this.value === "Rumah Kosong" ? 'none' : 'block';
+            });
+        }
+
+        // Event listener untuk logic dinamis Marketing
+        document.querySelectorAll('.select-prospek').forEach(el => {
+            el.addEventListener('change', () => {
+                const tab = document.getElementById('tab_mkt').value;
+                const dep = document.getElementById('dep_mkt').value;
+                document.getElementById('areaNominalMkt').style.display = 
+                    (tab !== "Tidak Berminat" || dep !== "Tidak Berminat") ? 'block' : 'none';
+            });
+        });
     };
 
-    async function syncDatabase() {
+    document.getElementById('formLogin').onsubmit = function(e) {
+        e.preventDefault();
+        const user = document.getElementById('user').value;
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userData', JSON.stringify({nama: user}));
+        location.reload();
+    };
+
+    async function syncData() {
         try {
-            const resPetugas = await fetch(SCRIPT_URL + "?action=getPetugas").then(r => r.json());
-            const resRencana = await fetch(SCRIPT_URL + "?action=getRencana").then(r => r.json());
-            localStorage.setItem('db_petugas', JSON.stringify(resPetugas.petugas));
-            localStorage.setItem('db_rencana', JSON.stringify(resRencana.rencana));
-            renderPetugasSelect();
-            if(activeUser) loadCloudHistory();
-        } catch(e) { console.warn("Sync Error"); }
+            const res = await fetch(`${WEB_APP_URL}?action=init`).then(r => r.json());
+            if(res.totalSetoran !== undefined) {
+                document.getElementById('dashSetoran').innerText = `Rp ${Number(res.totalSetoran).toLocaleString('id-ID')}`;
+                document.getElementById('barTarget').style.width = `${res.persenTarget || 0}%`;
+                document.getElementById('txtPersen').innerText = `${res.persenTarget || 0}% dari Target`;
+            }
+            if(res.daftarNasabah) {
+                document.getElementById('dataNasabah').innerHTML = res.daftarNasabah.map(n => `<option value="${n}">`).join('');
+            }
+        } catch (e) { console.log("Offline / Init Error"); }
     }
 
-    function renderPetugasSelect() {
-        const db = JSON.parse(localStorage.getItem('db_petugas')) || [];
-        const el = document.getElementById('selectPetugas');
-        el.innerHTML = '<option disabled selected>-- Pilih Nama Anda --</option>';
-        db.forEach(p => el.innerHTML += `<option value="${p.nama}">${p.nama}</option>`);
+    async function submitForm(e, type) {
+        e.preventDefault();
+        if(!currentPhoto) return alert("Wajib Lampirkan Foto!");
+        
+        setLoading(true, "Mendapatkan Lokasi GPS...");
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const user = JSON.parse(localStorage.getItem('userData'));
+            let payload = {
+                action: type,
+                petugas: user.nama,
+                gps: `${pos.coords.latitude},${pos.coords.longitude}`,
+                foto: currentPhoto
+            };
+
+            if (type === 'SAVE_COLLECTION') {
+                payload.nasabah = document.getElementById('n_coll').value;
+                payload.status = document.getElementById('s_coll').value;
+                payload.nominal = cleanRupiah(document.getElementById('nom_coll_display').value);
+                payload.tglJanji = document.getElementById('tglJanji').value;
+                payload.bertemu = document.getElementById('bertemu').value;
+            } else {
+                payload.nasabah = document.getElementById('n_mkt').value;
+                payload.wa = document.getElementById('wa_mkt').value;
+                payload.alamat = document.getElementById('alamat_mkt').value;
+                payload.tabungan = document.getElementById('tab_mkt').value;
+                payload.deposito = document.getElementById('dep_mkt').value;
+                payload.nominal = cleanRupiah(document.getElementById('nom_mkt_display').value);
+            }
+
+            setLoading(true, "Mengirim Data ke Server...");
+            try {
+                const response = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload) 
+                });
+                alert("Data Berhasil Terkirim!");
+                location.reload();
+            } catch (err) {
+                alert("Cek koneksi internet Anda!");
+                setLoading(false);
+            }
+        }, () => { 
+            alert("Gagal mendapatkan lokasi. Harap aktifkan GPS!"); 
+            setLoading(false); 
+        });
     }
 
-    function handleLogin() {
-        const name = document.getElementById('selectPetugas').value;
-        const pin = document.getElementById('inputPin').value;
-        const db = JSON.parse(localStorage.getItem('db_petugas')) || [];
-        const user = db.find(u => u.nama === name && u.pin.toString() === pin);
-        if(user) { 
-            activeUser = name; localStorage.setItem('bkk_user', name); 
-            showMainApp(); loadCloudHistory();
-        } else { alert("PIN Salah!"); }
-    }
-
-    function showMainApp() {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        document.getElementById('userNameDisp').innerText = activeUser;
-        renderTasks();
-    }
-
-    function navigateTo(pId, nId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(nId).classList.add('active');
-        if(pId === 'pageTugas') renderTasks();
-    }
-
-    // LOGIKA OTOMATIS TANGGAL & DISPLAY
-    function cekStatus() {
-        const status = document.getElementById('statusKunjungan').value;
-        const boxJanji = document.getElementById('boxJanji');
-        const boxNominal = document.getElementById('boxNominal');
-        const inpTgl = document.getElementById('tglJanjiBayar');
-
-        if (status === 'Janji Bayar') {
-            boxJanji.style.display = 'block';
-            boxNominal.style.display = 'none';
-            // OTOMATIS: Set tanggal hari ini + 7 hari
-            let targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + 7);
-            inpTgl.value = targetDate.toISOString().split('T')[0];
-        } else if (status === 'Rumah Kosong') {
-            boxJanji.style.display = 'none';
-            boxNominal.style.display = 'none';
-        } else {
-            boxJanji.style.display = 'none';
-            boxNominal.style.display = 'block';
-        }
-    }
+    document.getElementById('formCollection').onsubmit = (e) => submitForm(e, 'SAVE_COLLECTION');
+    document.getElementById('formMarketing').onsubmit = (e) => submitForm(e, 'SAVE_MARKETING');
 
     function formatRupiah(el) {
-        let val = el.value.replace(/[^0-9]/g, '');
-        el.value = val ? 'Rp ' + parseInt(val).toLocaleString('id-ID') : '';
+        let val = el.value.replace(/[^,\d]/g, '');
+        let split = val.split(','), sisa = split[0].length % 3, rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+        if (ribuan) { rupiah += (sisa ? '.' : '') + ribuan.join('.'); }
+        el.value = rupiah;
     }
 
-    function renderTasks() {
-        const db = JSON.parse(localStorage.getItem('db_rencana')) || [];
-        const el = document.getElementById('listTugas');
-        el.innerHTML = "";
-        const myTasks = db.filter(r => r.petugas.trim() === activeUser.trim());
-        if(myTasks.length === 0) {
-            el.innerHTML = '<div class="text-center p-5 text-muted">Tugas kosong.</div>';
-            return;
-        }
-        myTasks.forEach(t => {
-            el.innerHTML += `
-                <div class="card-custom p-3 mb-2 d-flex justify-content-between align-items-center" onclick="openForm('${t.nama}')">
-                    <div><div class="fw-bold">${t.nama}</div><small class="text-muted">${t.alamat}</small></div>
-                    <i class="bi bi-chevron-right text-primary"></i>
-                </div>`;
-        });
+    function cleanRupiah(val) { return parseInt(val.replace(/\./g, '')) || 0; }
+
+    function showPage(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        if(document.getElementById('nav_'+id)) document.getElementById('nav_'+id).classList.add('active');
+        window.scrollTo(0,0);
     }
 
-    function openForm(nama) { 
-        document.getElementById('inpNasabah').value = nama; 
-        document.getElementById('labelNasabah').innerText = "Lapor: " + nama;
-        navigateTo('pageForm', 'navTugas'); 
-    }
-
-    document.getElementById('inpFile').onchange = function(e) {
+    function handleFile(input, boxId) {
+        const file = input.files[0];
+        if (!file) return;
+        setLoading(true, "Kompresi Foto...");
         const reader = new FileReader();
-        reader.onload = function(ev) {
+        reader.onload = (e) => {
             const img = new Image();
-            img.src = ev.target.result;
-            img.onload = function() {
+            img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 600;
-                const scale = MAX_WIDTH / img.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
-            }
+                const MAX_WIDTH = 800;
+                let width = img.width, height = img.height;
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                currentPhoto = canvas.toDataURL('image/jpeg', 0.6);
+                document.getElementById(boxId).innerHTML = `<img src="${currentPhoto}" class="rounded">`;
+                setLoading(false);
+            };
+            img.src = e.target.result;
         };
-        reader.readAsDataURL(e.target.files[0]);
-    };
-
-    document.getElementById('formKoleksi').onsubmit = async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnSubmit');
-        btn.disabled = true; btn.innerHTML = 'Mengirim...';
-
-        let koordinat = "0,0";
-        try {
-            const pos = await new Promise((res, rej) => {
-                navigator.geolocation.getCurrentPosition(res, rej, {timeout: 5000});
-            });
-            koordinat = `${pos.coords.latitude},${pos.coords.longitude}`;
-        } catch(err) {}
-
-        const data = {
-            petugas: activeUser,
-            nama: document.getElementById('inpNasabah').value,
-            status: document.getElementById('statusKunjungan').value,
-            nominal: document.getElementById('nominalDisplay').value.replace(/[^0-9]/g, '') || 0,
-            waktu: new Date().toLocaleString('id-ID'),
-            foto: photoBase64,
-            lokasi: koordinat,
-            catatan: `Janji: ${document.getElementById('tglJanjiBayar').value}`
-        };
-
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-            alert("Berhasil!"); location.reload();
-        } catch(err) { alert("Gagal!"); btn.disabled = false; }
-    };
-
-    async function loadCloudHistory() {
-        const el = document.getElementById('cloudHistoryList');
-        el.innerHTML = '<div class="loading-spinner">Memuat...</div>';
-        try {
-            const res = await fetch(SCRIPT_URL + "?action=getRiwayat").then(r => r.json());
-            el.innerHTML = "";
-            updateDashboard(res.riwayat);
-            res.riwayat.filter(h => h.petugas === activeUser).forEach(h => {
-                el.innerHTML += `
-                    <div class="card-custom mb-3 overflow-hidden">
-                        <div class="row g-0">
-                            <div class="col-4"><img src="${h.foto}" class="img-fluid h-100" style="object-fit:cover"></div>
-                            <div class="col-8 p-3">
-                                <div class="fw-bold small">${h.nama}</div>
-                                <div class="badge bg-light text-dark mb-1" style="font-size:0.6rem">${h.status}</div>
-                                <div class="fw-bold text-success small">Rp ${Number(h.nominal).toLocaleString('id-ID')}</div>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-        } catch(e) { el.innerHTML = "Gagal memuat."; }
+        reader.readAsDataURL(file);
     }
 
-    function updateDashboard(riwayat) {
-        const dbRencana = JSON.parse(localStorage.getItem('db_rencana')) || [];
-        const myTasks = dbRencana.filter(r => r.petugas.trim() === activeUser.trim());
-        document.getElementById('countTarget').innerText = myTasks.length;
-
-        let totalUang = 0; let countDone = 0;
-        const today = new Date().toLocaleDateString('id-ID');
-
-        riwayat.forEach(h => {
-            if (h.petugas.trim() === activeUser.trim() && h.waktu.includes(today)) {
-                totalUang += parseInt(h.nominal || 0);
-                countDone++;
-            }
-        });
-        document.getElementById('countDone').innerText = countDone;
-        document.getElementById('totalSetoran').innerText = 'Rp ' + totalUang.toLocaleString('id-ID');
+    function setLoading(s, t) { 
+        document.getElementById('loader').style.display = s ? 'flex' : 'none'; 
+        document.getElementById('loaderText').innerText = t; 
     }
 
-    function handleLogout() { localStorage.removeItem('bkk_user'); location.reload(); }
+    function logout() { localStorage.clear(); location.reload(); }
 </script>
 </body>
 </html>
