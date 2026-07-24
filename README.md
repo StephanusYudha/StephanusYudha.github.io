@@ -6,18 +6,33 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root { --bkk-blue: #003366; --bkk-gold: #FFD700; --bkk-light: #f1f5f9; --bkk-success: #198754; --bkk-danger: #dc3545; }
-        body { background: var(--bkk-light); font-family: 'Inter', sans-serif; padding-bottom: 90px; overflow-x: hidden; }
+        :root { 
+            --bkk-blue: #003366; 
+            --bkk-gold: #FFD700; 
+            --bkk-light: #f1f5f9; 
+            --bkk-success: #198754; 
+            --bkk-danger: #dc3545; 
+        }
+        body { 
+            background: var(--bkk-light); 
+            font-family: 'Inter', sans-serif; 
+            padding-bottom: 90px; 
+            overflow-x: hidden; 
+        }
         
         .header-app { 
             background: linear-gradient(135deg, var(--bkk-blue) 0%, #004a99 100%); 
-            color: white; padding: 30px 20px 70px; 
+            color: white; 
+            padding: 30px 20px 70px; 
             border-bottom: 5px solid var(--bkk-gold); 
             border-radius: 0 0 35px 35px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+
         .stats-card { 
-            background: white; border-radius: 20px; padding: 22px; 
+            background: white; 
+            border-radius: 20px; 
+            padding: 22px; 
             margin: -45px 15px 25px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
             border: 1px solid rgba(0,0,0,0.05);
@@ -25,58 +40,100 @@
 
         .section { display: none; animation: slideUp 0.4s ease-out; }
         .section.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
 
-        .form-control, .form-select { border-radius: 10px; padding: 12px; border: 1px solid #e2e8f0; font-size: 0.95rem; }
+        .form-control, .form-select { 
+            border-radius: 10px; 
+            padding: 12px; 
+            border: 1px solid #e2e8f0; 
+            font-size: 0.95rem; 
+        }
+
         .preview-box { 
-            width: 100%; height: 200px; background: #f8fafc; 
-            border: 2px dashed #cbd5e1; border-radius: 18px; 
-            display: flex; align-items: center; justify-content: center; 
-            overflow: hidden; cursor: pointer;
+            width: 100%; 
+            height: 200px; 
+            background: #f8fafc; 
+            border: 2px dashed #cbd5e1; 
+            border-radius: 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            cursor: pointer;
         }
         .preview-box img { width: 100%; height: 100%; object-fit: cover; }
 
         .bottom-nav { 
-            position: fixed; bottom: 0; width: 100%; 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            display: flex; padding: 10px 0; border-top: 1px solid #e2e8f0; 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: rgba(255,255,255,0.95); 
+            backdrop-filter: blur(10px);
+            display: flex; 
+            padding: 10px 0; 
+            border-top: 1px solid #e2e8f0; 
             z-index: 1000;
         }
-        .nav-link { flex: 1; text-align: center; color: #64748b; text-decoration: none; font-size: 0.60rem; font-weight: 700; }
+        .nav-link { 
+            flex: 1; 
+            text-align: center; 
+            color: #64748b; 
+            text-decoration: none; 
+            font-size: 0.60rem; 
+            font-weight: 700; 
+        }
         .nav-link.active { color: var(--bkk-blue); }
         .nav-link i { font-size: 1.2rem; display: block; }
 
         #loader { 
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-            z-index: 11000; flex-direction: column; align-items: center; justify-content: center; 
-            color: white; backdrop-filter: blur(8px); 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 11000; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            backdrop-filter: blur(8px); 
         }
     </style>
 </head>
 <body>
 
+<!-- LOADER -->
 <div id="loader">
     <div class="spinner-grow text-warning mb-3"></div>
     <h6 id="loaderText" class="fw-bold">Memproses Data...</h6>
 </div>
 
+<!-- PAGE LOGIN -->
 <div id="pageLogin" style="position:fixed; inset:0; background:var(--bkk-light); z-index:10000; display:flex; align-items:center;">
     <div class="container p-4">
         <div class="text-center mb-5">
-            <div class="bg-primary d-inline-block p-4 rounded-5 mb-3 shadow"><i class="bi bi-bank2 text-white fs-1"></i></div>
+            <div class="bg-primary d-inline-block p-4 rounded-5 mb-3 shadow">
+                <i class="bi bi-bank2 text-white fs-1"></i>
+            </div>
             <h2 class="fw-bold m-0" style="color: var(--bkk-blue);">AMORE</h2>
-            <p class="text-muted small">Enterprise Reporting v2.5</p>
+            <p class="text-muted small">Enterprise Reporting v2.7</p>
         </div>
         <form id="formLogin" class="bg-white p-4 rounded-4 shadow-sm border">
-            <input type="text" id="user" class="form-control mb-3" placeholder="Username" required>
+            <input type="text" id="user" class="form-control mb-3" placeholder="Username (misal: marketing1)" required>
             <input type="password" id="pass" class="form-control mb-4" placeholder="Password" required>
             <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3">LOG IN SYSTEM</button>
         </form>
     </div>
 </div>
 
+<!-- APP HEADER -->
 <div class="header-app d-flex justify-content-between align-items-start">
-    <div><h5 class="fw-bold mb-0">AMORE SYSTEM</h5><small id="userGreet" class="opacity-75">Halo, Petugas</small></div>
+    <div>
+        <h5 class="fw-bold mb-0">AMORE SYSTEM</h5>
+        <small id="userGreet" class="opacity-75">Halo, Petugas</small>
+    </div>
     <div class="bg-white rounded-circle p-2 shadow-sm text-center" style="width: 40px; height: 40px; cursor:pointer;" onclick="logout()">
         <i class="bi bi-power text-danger fs-5"></i>
     </div>
@@ -98,18 +155,21 @@
         <div class="row g-3">
             <div class="col-6" onclick="showPage('pageColl')" style="cursor:pointer;">
                 <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-primary">
-                    <i class="bi bi-wallet2 fs-1 text-primary mb-2"></i><span class="small fw-bold">KOLEKSI</span>
+                    <i class="bi bi-wallet2 fs-1 text-primary mb-2"></i>
+                    <span class="small fw-bold">KOLEKSI</span>
                 </div>
             </div>
             <div class="col-6" onclick="showPage('pageKredit')" style="cursor:pointer;">
                 <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-danger">
-                    <i class="bi bi-cash-coin fs-1 text-danger mb-2"></i><span class="small fw-bold">KREDIT</span>
+                    <i class="bi bi-cash-coin fs-1 text-danger mb-2"></i>
+                    <span class="small fw-bold">KREDIT</span>
                 </div>
             </div>
             <div class="col-12" onclick="showPage('pageMkt')" style="cursor:pointer;">
                 <div class="card border-0 shadow-sm text-center p-3 rounded-4 border-bottom border-4 border-success">
                     <div class="d-flex align-items-center justify-content-center">
-                        <i class="bi bi-person-plus fs-2 text-success me-3"></i><span class="small fw-bold">PROSPEK FUNDING (TABUNGAN/DEPOSITO)</span>
+                        <i class="bi bi-person-plus fs-2 text-success me-3"></i>
+                        <span class="small fw-bold">PROSPEK FUNDING (TABUNGAN/DEPOSITO)</span>
                     </div>
                 </div>
             </div>
@@ -121,7 +181,8 @@
 <div id="pageColl" class="section p-3">
     <div class="card border-0 shadow-sm rounded-4 p-4">
         <div class="d-flex align-items-center mb-4 text-primary" onclick="showPage('pageHome')" style="cursor:pointer;">
-            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Laporan Koleksi</h5>
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i>
+            <h5 class="fw-bold mb-0">Laporan Koleksi</h5>
         </div>
         <form id="formCollection">
             <div class="mb-3">
@@ -206,7 +267,8 @@
 <div id="pageKredit" class="section p-3">
     <div class="card border-0 shadow-sm rounded-4 p-4">
         <div class="d-flex align-items-center mb-4 text-danger" onclick="showPage('pageHome')" style="cursor:pointer;">
-            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Prospek Kredit Baru</h5>
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i>
+            <h5 class="fw-bold mb-0">Prospek Kredit Baru</h5>
         </div>
         <form id="formKredit">
             <div class="mb-3">
@@ -266,7 +328,8 @@
 <div id="pageMkt" class="section p-3">
     <div class="card border-0 shadow-sm rounded-4 p-4">
         <div class="d-flex align-items-center mb-4 text-success" onclick="showPage('pageHome')" style="cursor:pointer;">
-            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Prospek Funding</h5>
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i>
+            <h5 class="fw-bold mb-0">Prospek Funding</h5>
         </div>
         <form id="formMarketing">
             <div class="mb-3">
@@ -317,7 +380,7 @@
     </div>
 </div>
 
-<!-- PAGE RIWAYAT (BARU) -->
+<!-- PAGE RIWAYAT -->
 <div id="pageHistory" class="section p-3">
     <div class="card border-0 shadow-sm rounded-4 p-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -325,11 +388,10 @@
             <button class="btn btn-sm btn-outline-primary" onclick="loadHistory()"><i class="bi bi-arrow-repeat"></i> Refresh</button>
         </div>
         
-        <!-- Filter Waktu -->
         <div class="mb-3">
             <label class="small fw-bold text-muted">Filter Waktu:</label>
             <select id="filterWaktu" class="form-select form-select-sm" onchange="renderHistoryList()">
-                <option value="30">1 Bulan Terakhir (30 Hari)</option>
+                <option value="30" selected>1 Bulan Terakhir (30 Hari)</option>
                 <option value="7">7 Hari Terakhir</option>
                 <option value="all">Semua Riwayat</option>
             </select>
@@ -341,7 +403,7 @@
     </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- BOTTOM NAVIGATION -->
 <div class="bottom-nav">
     <a href="javascript:void(0)" id="nav_pageHome" class="nav-link active" onclick="showPage('pageHome')"><i class="bi bi-house-door"></i>HOME</a>
     <a href="javascript:void(0)" id="nav_pageColl" class="nav-link" onclick="showPage('pageColl')"><i class="bi bi-wallet2"></i>KOLEKSI</a>
@@ -351,7 +413,9 @@
 </div>
 
 <script>
-    const WEB_APP_URL = "GANTI_DENGAN_URL_DEPLOY_APPS_SCRIPT_ANDA"; 
+    // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbznPHn3pa4JmwKPpoakO3M7N_eMx3BPbw92wC-Hzlga8ekqU3ASuMI2gJlLdkBWg-CcGA/exec"; 
+    
     let currentPhoto = "";
     let rawHistoryData = [];
 
@@ -382,12 +446,42 @@
         });
     };
 
-    document.getElementById('formLogin').onsubmit = function(e) {
+    // Integrasi Login dengan Google Apps Script Database (Sheet Users)
+    document.getElementById('formLogin').onsubmit = async function(e) {
         e.preventDefault();
-        const user = document.getElementById('user').value;
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userData', JSON.stringify({nama: user}));
-        location.reload();
+        const userVal = document.getElementById('user').value.trim();
+        const passVal = document.getElementById('pass').value.trim();
+
+        setLoading(true, "Memverifikasi Akun...");
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'LOGIN', 
+                    username: userVal, 
+                    password: passVal 
+                })
+            });
+            
+            const res = await response.json();
+            setLoading(false);
+
+            if (res.status === 'success') {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userData', JSON.stringify({
+                    username: userVal,
+                    nama: res.nama,
+                    role: res.role
+                }));
+                location.reload();
+            } else {
+                alert(res.message);
+            }
+        } catch (err) {
+            setLoading(false);
+            alert("Gagal terhubung ke server. Periksa koneksi internet Anda.");
+        }
     };
 
     async function syncData() {
@@ -398,10 +492,12 @@
                 document.getElementById('barTarget').style.width = `${res.persenTarget || 0}%`;
                 document.getElementById('txtPersen').innerText = `${res.persenTarget || 0}% dari Target`;
             }
-            if(res.daftarNasabah) {
+            if(res.daftarNasabah && res.daftarNasabah.length > 0) {
                 document.getElementById('dataNasabah').innerHTML = res.daftarNasabah.map(n => `<option value="${n}">`).join('');
             }
-        } catch (e) { console.log("Offline / Init Error"); }
+        } catch (e) { 
+            console.log("Offline / Init Sync Error"); 
+        }
     }
 
     async function loadHistory() {
@@ -413,7 +509,7 @@
                 renderHistoryList();
             }
         } catch (e) {
-            document.getElementById('containerHistoryList').innerHTML = `<p class="text-center text-danger small">Gagal memuat riwayat.</p>`;
+            document.getElementById('containerHistoryList').innerHTML = `<p class="text-center text-danger small py-4">Gagal memuat data riwayat.</p>`;
         }
     }
 
@@ -433,7 +529,7 @@
         }
 
         if (filtered.length === 0) {
-            container.innerHTML = `<p class="text-center text-muted small py-4">Tidak ada riwayat dalam rentang waktu ini.</p>`;
+            container.innerHTML = `<p class="text-center text-muted small py-4">Tidak ada riwayat pada rentang waktu ini.</p>`;
             return;
         }
 
@@ -450,7 +546,7 @@
                     </div>
                     <h6 class="fw-bold mb-1 text-dark">${item.nasabah}</h6>
                     <p class="small text-muted mb-2">${item.keterangan}</p>
-                    ${item.foto && item.foto.startsWith('http') ? `<a href="${item.foto}" target="_blank" class="small text-decoration-none"><i class="bi bi-image"></i> Lihat Foto Lampiran</a>` : ''}
+                    ${item.foto && item.foto.startsWith('http') ? `<a href="${item.foto}" target="_blank" class="small text-decoration-none fw-bold"><i class="bi bi-image"></i> Lihat Foto Lampiran</a>` : ''}
                 </div>
             `;
         });
@@ -459,7 +555,7 @@
 
     async function submitForm(e, type) {
         e.preventDefault();
-        if(!currentPhoto) return alert("Wajib Lampirkan Foto!");
+        if(!currentPhoto) return alert("Wajib melampirkan foto!");
         
         setLoading(true, "Mendapatkan Lokasi GPS...");
         navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -509,11 +605,11 @@
                 alert("Data Berhasil Terkirim!");
                 location.reload();
             } catch (err) {
-                alert("Cek koneksi internet Anda!");
+                alert("Gagal terhubung! Harap cek koneksi internet Anda.");
                 setLoading(false);
             }
         }, () => { 
-            alert("Gagal mendapatkan lokasi. Harap aktifkan GPS!"); 
+            alert("Gagal mendapatkan lokasi. Harap aktifkan fitur GPS pada browser Anda!"); 
             setLoading(false); 
         });
     }
@@ -536,13 +632,17 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         if(document.getElementById('nav_'+id)) document.getElementById('nav_'+id).classList.add('active');
+        
+        if (id === 'pageHistory') {
+            loadHistory();
+        }
         window.scrollTo(0,0);
     }
 
     function handleFile(input, boxId) {
         const file = input.files[0];
         if (!file) return;
-        setLoading(true, "Kompresi Foto...");
+        setLoading(true, "Mengompresi Foto...");
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
@@ -567,7 +667,10 @@
         document.getElementById('loaderText').innerText = t; 
     }
 
-    function logout() { localStorage.clear(); location.reload(); }
+    function logout() { 
+        localStorage.clear(); 
+        location.reload(); 
+    }
 </script>
 </body>
 </html>
