@@ -42,9 +42,9 @@
             display: flex; padding: 10px 0; border-top: 1px solid #e2e8f0; 
             z-index: 1000;
         }
-        .nav-link { flex: 1; text-align: center; color: #64748b; text-decoration: none; font-size: 0.65rem; font-weight: 700; }
+        .nav-link { flex: 1; text-align: center; color: #64748b; text-decoration: none; font-size: 0.60rem; font-weight: 700; }
         .nav-link.active { color: var(--bkk-blue); }
-        .nav-link i { font-size: 1.3rem; display: block; }
+        .nav-link i { font-size: 1.2rem; display: block; }
 
         #loader { 
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
@@ -251,7 +251,7 @@
                 </div>
             </div>
             <div class="mb-4">
-                <label class="small fw-bold text-muted mb-1">FOTO LOKASI USAHA / RUMAH CALON NASABAH</label>
+                <label class="small fw-bold text-muted mb-1">FOTO LOKASI USAHA / RUMAH</label>
                 <div class="preview-box" id="box_kredit" onclick="document.getElementById('f_kredit').click()">
                     <i class="bi bi-camera-fill fs-1 text-danger"></i>
                 </div>
@@ -317,17 +317,43 @@
     </div>
 </div>
 
+<!-- PAGE RIWAYAT (BARU) -->
+<div id="pageHistory" class="section p-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2"></i>Riwayat Aktivitas</h5>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadHistory()"><i class="bi bi-arrow-repeat"></i> Refresh</button>
+        </div>
+        
+        <!-- Filter Waktu -->
+        <div class="mb-3">
+            <label class="small fw-bold text-muted">Filter Waktu:</label>
+            <select id="filterWaktu" class="form-select form-select-sm" onchange="renderHistoryList()">
+                <option value="30">1 Bulan Terakhir (30 Hari)</option>
+                <option value="7">7 Hari Terakhir</option>
+                <option value="all">Semua Riwayat</option>
+            </select>
+        </div>
+
+        <div id="containerHistoryList">
+            <p class="text-center text-muted small py-4">Memuat riwayat...</p>
+        </div>
+    </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
     <a href="javascript:void(0)" id="nav_pageHome" class="nav-link active" onclick="showPage('pageHome')"><i class="bi bi-house-door"></i>HOME</a>
     <a href="javascript:void(0)" id="nav_pageColl" class="nav-link" onclick="showPage('pageColl')"><i class="bi bi-wallet2"></i>KOLEKSI</a>
     <a href="javascript:void(0)" id="nav_pageKredit" class="nav-link" onclick="showPage('pageKredit')"><i class="bi bi-cash-coin"></i>KREDIT</a>
     <a href="javascript:void(0)" id="nav_pageMkt" class="nav-link" onclick="showPage('pageMkt')"><i class="bi bi-person-plus"></i>FUNDING</a>
+    <a href="javascript:void(0)" id="nav_pageHistory" class="nav-link" onclick="showPage('pageHistory')"><i class="bi bi-clock-history"></i>RIWAYAT</a>
 </div>
 
 <script>
     const WEB_APP_URL = "GANTI_DENGAN_URL_DEPLOY_APPS_SCRIPT_ANDA"; 
     let currentPhoto = "";
+    let rawHistoryData = [];
 
     window.onload = () => {
         if (localStorage.getItem('isLoggedIn') === 'true') {
@@ -335,6 +361,7 @@
             const u = JSON.parse(localStorage.getItem('userData'));
             document.getElementById('userGreet').innerText = `Halo, ${u.nama}`;
             syncData();
+            loadHistory();
         }
 
         const sColl = document.getElementById('s_coll');
@@ -375,6 +402,59 @@
                 document.getElementById('dataNasabah').innerHTML = res.daftarNasabah.map(n => `<option value="${n}">`).join('');
             }
         } catch (e) { console.log("Offline / Init Error"); }
+    }
+
+    async function loadHistory() {
+        try {
+            const user = JSON.parse(localStorage.getItem('userData'));
+            const res = await fetch(`${WEB_APP_URL}?action=getHistory&petugas=${encodeURIComponent(user.nama)}`).then(r => r.json());
+            if(Array.isArray(res)) {
+                rawHistoryData = res;
+                renderHistoryList();
+            }
+        } catch (e) {
+            document.getElementById('containerHistoryList').innerHTML = `<p class="text-center text-danger small">Gagal memuat riwayat.</p>`;
+        }
+    }
+
+    function renderHistoryList() {
+        const filterDays = document.getElementById('filterWaktu').value;
+        const container = document.getElementById('containerHistoryList');
+        
+        let filtered = rawHistoryData;
+        if (filterDays !== 'all') {
+            const now = new Date();
+            filtered = rawHistoryData.filter(item => {
+                const itemDate = new Date(item.timestamp);
+                const diffTime = Math.abs(now - itemDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays <= parseInt(filterDays);
+            });
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<p class="text-center text-muted small py-4">Tidak ada riwayat dalam rentang waktu ini.</p>`;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(item => {
+            const dateStr = new Date(item.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            let badgeColor = item.kategori === 'Koleksi' ? 'bg-primary' : (item.kategori === 'Kredit' ? 'bg-danger' : 'bg-success');
+            
+            html += `
+                <div class="card border mb-2 shadow-none rounded-3 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge ${badgeColor}">${item.kategori}</span>
+                        <small class="text-muted" style="font-size: 0.75rem;">${dateStr}</small>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark">${item.nasabah}</h6>
+                    <p class="small text-muted mb-2">${item.keterangan}</p>
+                    ${item.foto && item.foto.startsWith('http') ? `<a href="${item.foto}" target="_blank" class="small text-decoration-none"><i class="bi bi-image"></i> Lihat Foto Lampiran</a>` : ''}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
     }
 
     async function submitForm(e, type) {
