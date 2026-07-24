@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root { --bkk-blue: #003366; --bkk-gold: #FFD700; --bkk-light: #f1f5f9; --bkk-success: #198754; }
+        :root { --bkk-blue: #003366; --bkk-gold: #FFD700; --bkk-light: #f1f5f9; --bkk-success: #198754; --bkk-danger: #dc3545; }
         body { background: var(--bkk-light); font-family: 'Inter', sans-serif; padding-bottom: 90px; overflow-x: hidden; }
         
         .header-app { 
@@ -40,12 +39,12 @@
         .bottom-nav { 
             position: fixed; bottom: 0; width: 100%; 
             background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            display: flex; padding: 12px 0; border-top: 1px solid #e2e8f0; 
+            display: flex; padding: 10px 0; border-top: 1px solid #e2e8f0; 
             z-index: 1000;
         }
-        .nav-link { flex: 1; text-align: center; color: #64748b; text-decoration: none; font-size: 0.7rem; font-weight: 700; }
+        .nav-link { flex: 1; text-align: center; color: #64748b; text-decoration: none; font-size: 0.65rem; font-weight: 700; }
         .nav-link.active { color: var(--bkk-blue); }
-        .nav-link i { font-size: 1.5rem; display: block; }
+        .nav-link i { font-size: 1.3rem; display: block; }
 
         #loader { 
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
@@ -78,11 +77,12 @@
 
 <div class="header-app d-flex justify-content-between align-items-start">
     <div><h5 class="fw-bold mb-0">AMORE SYSTEM</h5><small id="userGreet" class="opacity-75">Halo, Petugas</small></div>
-    <div class="bg-white rounded-circle p-2 shadow-sm text-center" style="width: 40px; height: 40px;" onclick="logout()">
+    <div class="bg-white rounded-circle p-2 shadow-sm text-center" style="width: 40px; height: 40px; cursor:pointer;" onclick="logout()">
         <i class="bi bi-power text-danger fs-5"></i>
     </div>
 </div>
 
+<!-- PAGE HOME -->
 <div id="pageHome" class="section active">
     <div class="stats-card">
         <small class="text-muted fw-bold">REALISASI SETORAN HARI INI</small>
@@ -96,23 +96,31 @@
     <div class="container mt-4 px-4">
         <h6 class="fw-bold text-muted mb-3">LAYANAN UTAMA</h6>
         <div class="row g-3">
-            <div class="col-6" onclick="showPage('pageColl')">
+            <div class="col-6" onclick="showPage('pageColl')" style="cursor:pointer;">
                 <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-primary">
                     <i class="bi bi-wallet2 fs-1 text-primary mb-2"></i><span class="small fw-bold">KOLEKSI</span>
                 </div>
             </div>
-            <div class="col-6" onclick="showPage('pageMkt')">
-                <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-success">
-                    <i class="bi bi-person-plus fs-1 text-success mb-2"></i><span class="small fw-bold">MARKETING</span>
+            <div class="col-6" onclick="showPage('pageKredit')" style="cursor:pointer;">
+                <div class="card border-0 shadow-sm text-center p-4 rounded-4 border-bottom border-4 border-danger">
+                    <i class="bi bi-cash-coin fs-1 text-danger mb-2"></i><span class="small fw-bold">KREDIT</span>
+                </div>
+            </div>
+            <div class="col-12" onclick="showPage('pageMkt')" style="cursor:pointer;">
+                <div class="card border-0 shadow-sm text-center p-3 rounded-4 border-bottom border-4 border-success">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-plus fs-2 text-success me-3"></i><span class="small fw-bold">PROSPEK FUNDING (TABUNGAN/DEPOSITO)</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- PAGE KOLEKSI -->
 <div id="pageColl" class="section p-3">
     <div class="card border-0 shadow-sm rounded-4 p-4">
-        <div class="d-flex align-items-center mb-4 text-primary" onclick="showPage('pageHome')">
+        <div class="d-flex align-items-center mb-4 text-primary" onclick="showPage('pageHome')" style="cursor:pointer;">
             <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Laporan Koleksi</h5>
         </div>
         <form id="formCollection">
@@ -122,98 +130,66 @@
                 <datalist id="dataNasabah"></datalist>
             </div>
             <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="small fw-bold text-muted">Status</label>
-                            <select id="statusKunjungan" class="form-select py-2" onchange="cekStatus()" required>
-                                <option value="Titip Angsuran">Titip Angsuran</option>
-                                <option value="Bayar Sebagian">Bayar Sebagian</option>
-                                <option value="Janji Bayar">Janji Bayar</option>
-                                <option value="Rumah Kosong">Rumah Kosong</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="small fw-bold text-muted">Bertemu</label>
-                            <select id="bertemuDengan" class="form-select py-2">
-                                <option value="Debitur">Debitur</option>
-                                <option value="Pasangan">Pasangan</option>
-                                <option value="Keluarga">Keluarga</option>
-                                <option value="Tetangga">Tetangga</option>
-                            </select>
-                        </div>
-                    </div>
+                <div class="col-6">
+                    <label class="small fw-bold text-muted">Status</label>
+                    <select id="s_coll" class="form-select py-2" required>
+                        <option value="Titip Angsuran">Titip Angsuran</option>
+                        <option value="Bayar Sebagian">Bayar Sebagian</option>
+                        <option value="Janji Bayar">Janji Bayar</option>
+                        <option value="Rumah Kosong">Rumah Kosong</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="small fw-bold text-muted">Bertemu</label>
+                    <select id="bertemu" class="form-select py-2">
+                        <option value="Debitur">Debitur</option>
+                        <option value="Pasangan">Pasangan</option>
+                        <option value="Keluarga">Keluarga</option>
+                        <option value="Tetangga">Tetangga</option>
+                    </select>
+                </div>
+            </div>
 
-                    <div id="areaNominal" class="p-3 border rounded bg-light mb-3">
-                        <div id="boxJanji" style="display:none;">
-                            <label class="small fw-bold text-danger">Tanggal Janji Bayar:</label>
-                            <input type="date" id="tglJanjiBayar" class="form-control mb-2">
-                        </div>
-                        <div id="boxNominal">
-                            <label class="small fw-bold text-primary">Nominal Pembayaran (Rp):</label>
-                            <input type="text" id="nominalDisplay" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
-                        </div>
-                    </div>
+            <div id="areaNominal" class="p-3 border rounded bg-light mb-3">
+                <div id="boxJanji" style="display:none;" class="mb-2">
+                    <label class="small fw-bold text-danger">Tanggal Janji Bayar:</label>
+                    <input type="date" id="tglJanji" class="form-control">
+                </div>
+                <div id="boxNominal">
+                    <label class="small fw-bold text-primary">Nominal Pembayaran (Rp):</label>
+                    <input type="text" id="nom_coll_display" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
+                </div>
+            </div>
 
-                    <div class="mb-3">
-                        <label class="small fw-bold">Jenis Usaha:</label>
-                        <select id="usahaDebitur" class="form-select" required>
-                            <option value="" disabled selected>Pilih Usaha...</option>
-                            <option value="Perdagangan">Perdagangan</option>
-                            <option value="Pertanian dan Perkebunan">Pertanian dan Perkebunan</option>
-                            <option value="Peternakan">Peternakan</option>
-                            <option value="Jasa">Jasa</option>
-                            <option value="Industri dan Produksi">Industri dan Produksi</option>
-                            <option value="Properti dan Kontruksi">Properti dan Kontruksi</option>
-                            <option value="Kuliner dan F&B">Kuliner dan F&B</option>
-                            <option value="Transportasi dan Logistik">Transportasi dan Logistik</option>
-                            <option value="Teknologi dan Kreatif">Teknologi dan Kreatif</option>
-                            <option value="Keuangan dan Lainnya">Keuangan dan Lainnya</option>
-                            <option value="Sosial dan Lainnya">Sosial dan Lainnya</option>
-                            <option value="Perikanan dan Kelautan">Perikanan dan Kelautan</option>
-                            <option value="Pariwisata dan Hiburan">Pariwisata dan Hiburan</option>
-                            <option value="Pendidikan dan kesehatan">Pendidikan dan kesehatan</option>
-                            <option value="Energi dan Lingkungan">Energi dan Lingkungan</option>
-                        </select>
-                    </div>
+            <div class="mb-3">
+                <label class="small fw-bold">Jenis Usaha:</label>
+                <select id="usahaDebitur" class="form-select" required>
+                    <option value="" disabled selected>Pilih Usaha...</option>
+                    <option value="Perdagangan">Perdagangan</option>
+                    <option value="Pertanian dan Perkebunan">Pertanian dan Perkebunan</option>
+                    <option value="Peternakan">Peternakan</option>
+                    <option value="Jasa">Jasa</option>
+                    <option value="Industri dan Produksi">Industri dan Produksi</option>
+                    <option value="Kuliner dan F&B">Kuliner dan F&B</option>
+                </select>
+            </div>
 
-                    <div class="mb-3">
-                        <label class="small fw-bold">Penyebab / Kendala:</label>
-                        <select id="penyebab" class="form-select mb-2" required>
-                            <option value="" disabled selected>Penyebab Tidak Bayar...</option>
-                            <option value="Karakter/Itikad Bayar Lemah">Karakter/Itikad Bayar Lemah</option>
-                            <option value="Penggunaan Dana Tidak Sesuai">Penggunaan Dana Tidak Sesuai</option>
-                            <option value="Dana Dipakai Oranglain">Dana Dipakai Oranglain</option>
-                            <option value="Omset Menurun/Usaha Sepi">Omset Menurun/Usaha Sepi</option>
-                            <option value="Manajemen Usaha Lemah">Manajemen Usaha Lemah</option>
-                            <option value="Banyak Hutang">Banyak Hutang</option>
-                            <option value="Sakit">Sakit</option>
-                            <option value="Meninggal">Meninggal</option>
-                            <option value="Perceraian">Perceraian</option>
-                            <option value="Konflik Keluarga">Konflik Keluarga</option>
-                            <option value="Modal Untuk Konsumsi Pribadi">Modal Untuk Konsumsi Pribadi</option>
-                            <option value="Monitoring dan Penagihan Tidak Optimal">Monitoring dan Penagihan Tidak Optimal</option>
-                            <option value="Piutang Tidak Terbayar">Piutang Tidak Terbayar</option>
-                            <option value="Fraud Internal">Fraud Internal</option>
-                            <option value="Penipuan Rekan Bisnis">Penipuan Rekan Bisnis</option>
-                            <option value="SKIP">SKIP</option>
-                            <option value="Bencana">Bencana</option>
-                            <option value="Gagal Panen">Gagal Panen</option>
-                            <option value="Persaingan Usaha">Persaingan Usaha</option>
-                            <option value="Usaha Tutup">Usaha Tutup</option>
-                        </select>
-                      
-                      <select id="kendala" class="form-select mb-3" required>
-                            <option value="" disabled selected>Kendala Penyelesaian ...</option>
-                            <option value="Debitur Tidak Kooperatif">Debitur Tidak Kooperatif</option>
-                            <option value="Nomor HP Tidak Aktif">Nomor HP Tidak Aktif</option>
-                            <option value="Debitur Pindah Alamat">Debitur Pindah Alamat Tanpa Pemberitahuan</option>
-                            <option value="Janji Palsu">Debitur Hanya Memberikan Janji Palsu</option>
-                            <option value="Omset Menurun">Omset/Pendapatan Debitur Menurun Signifikan</option>
-                            <option value="Bangkrut">Usaha Tutup/Bangkrut</option>
-                            <option value="PHK">Debitur Mengalami PHK</option>
-                            <option value="Sakit Berat">Debitur Sakit Berat/Meninggal</option>
-                            <option value="Sengketa Agunan">Agunan Dalam Sengketa/Belum Balik Nama</option>
-                        </select>
-                    </div>
+            <div class="mb-3">
+                <label class="small fw-bold">Penyebab / Kendala:</label>
+                <select id="penyebab" class="form-select mb-2" required>
+                    <option value="" disabled selected>Penyebab Tidak Bayar...</option>
+                    <option value="Omset Menurun/Usaha Sepi">Omset Menurun/Usaha Sepi</option>
+                    <option value="Banyak Hutang">Banyak Hutang</option>
+                    <option value="Sakit">Sakit</option>
+                    <option value="Gagal Panen">Gagal Panen</option>
+                </select>
+                <select id="kendala" class="form-select mb-3" required>
+                    <option value="" disabled selected>Kendala Penyelesaian ...</option>
+                    <option value="Debitur Tidak Kooperatif">Debitur Tidak Kooperatif</option>
+                    <option value="Janji Palsu">Debitur Hanya Memberikan Janji Palsu</option>
+                    <option value="Omset Menurun">Omset Menurun Signifikan</option>
+                </select>
+            </div>
 
             <div class="mb-4">
                 <div class="preview-box" id="box_coll" onclick="document.getElementById('f_coll').click()">
@@ -226,215 +202,127 @@
     </div>
 </div>
 
+<!-- PAGE PROSPEK KREDIT -->
+<div id="pageKredit" class="section p-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex align-items-center mb-4 text-danger" onclick="showPage('pageHome')" style="cursor:pointer;">
+            <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Prospek Kredit Baru</h5>
+        </div>
+        <form id="formKredit">
+            <div class="mb-3">
+                <label class="small fw-bold">NAMA CALON DEBITUR</label>
+                <input type="text" id="n_kredit" class="form-control" placeholder="Nama lengkap sesuai KTP" required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">NO. WHATSAPP (WA)</label>
+                <input type="tel" id="wa_kredit" class="form-control" placeholder="0812..." required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">ESTIMASI PLAFON PINJAMAN (Rp)</label>
+                <input type="text" id="plafon_kredit" class="form-control fw-bold text-danger" placeholder="Rp 0" onkeyup="formatRupiah(this)" required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">JANGKA WAKTU (TENOR)</label>
+                <select id="tenor_kredit" class="form-select" required>
+                    <option value="" disabled selected>Pilih Tenor...</option>
+                    <option value="6 Bulan">6 Bulan</option>
+                    <option value="12 Bulan">12 Bulan</option>
+                    <option value="18 Bulan">18 Bulan</option>
+                    <option value="24 Bulan">24 Bulan</option>
+                    <option value="36 Bulan">36 Bulan</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">TUJUAN PENGGUNAAN KREDIT</label>
+                <select id="tujuan_kredit" class="form-select" required>
+                    <option value="" disabled selected>Pilih Tujuan...</option>
+                    <option value="Modal Kerja Usaha">Modal Kerja Usaha</option>
+                    <option value="Investasi / Pembelian Alat">Investasi / Pembelian Alat</option>
+                    <option value="Konsumtif / Renovasi Rumah">Konsumtif / Renovasi Rumah</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+            <div class="p-3 border rounded bg-light mb-3">
+                <label class="small fw-bold mb-2 text-muted"><i class="bi bi-geo-alt-fill"></i> ALAMAT LOKASI USAHA / RUMAH</label>
+                <textarea id="alamat_kredit" class="form-control mb-2" rows="2" placeholder="Jalan / RT / RW" required></textarea>
+                <div class="row g-2">
+                    <div class="col-6"><input type="text" id="kel_kredit" class="form-control form-control-sm" placeholder="Kelurahan" required></div>
+                    <div class="col-6"><input type="text" id="kota_kredit" class="form-control form-control-sm" placeholder="Kota/Kab" required></div>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="small fw-bold text-muted mb-1">FOTO LOKASI USAHA / RUMAH CALON NASABAH</label>
+                <div class="preview-box" id="box_kredit" onclick="document.getElementById('f_kredit').click()">
+                    <i class="bi bi-camera-fill fs-1 text-danger"></i>
+                </div>
+                <input type="file" id="f_kredit" class="d-none" accept="image/*" capture="camera" onchange="handleFile(this, 'box_kredit')">
+            </div>
+            <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-3 shadow">KIRIM PROSPEK KREDIT</button>
+        </form>
+    </div>
+</div>
+
+<!-- PAGE PROSPEK FUNDING -->
 <div id="pageMkt" class="section p-3">
     <div class="card border-0 shadow-sm rounded-4 p-4">
-        <div class="d-flex align-items-center mb-4 text-success" onclick="showPage('pageHome')">
+        <div class="d-flex align-items-center mb-4 text-success" onclick="showPage('pageHome')" style="cursor:pointer;">
             <i class="bi bi-arrow-left-circle-fill fs-4 me-2"></i><h5 class="fw-bold mb-0">Prospek Funding</h5>
         </div>
         <form id="formMarketing">
             <div class="mb-3">
-
-
-
-<label class="small fw-bold">NAMA CALON NASABAH</label>
-
-
-
-<input type="text" id="n_mkt" class="form-control" placeholder="Nama lengkap" required>
-
-
-
-</div>
-
-
-
-<div class="mb-3">
-
-
-
-<label class="small fw-bold">NO. WHATSAPP (WA)</label>
-
-
-
-<input type="tel" id="wa_mkt" class="form-control" placeholder="0812..." required>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="p-3 border rounded bg-light mb-3">
-
-
-
-<label class="small fw-bold mb-2 text-muted"><i class="bi bi-geo-alt-fill"></i> ALAMAT LENGKAP</label>
-
-
-
-<textarea id="alamat_mkt" class="form-control mb-2" rows="2" placeholder="Jalan / RT / RW" required></textarea>
-
-
-
-<div class="row g-2">
-
-
-
-<div class="col-6"><input type="text" id="kel_mkt" class="form-control form-control-sm" placeholder="Kelurahan" required></div>
-
-
-
-<div class="col-6"><input type="text" id="kota_mkt" class="form-control form-control-sm" placeholder="Kota/Kab" required></div>
-
-
-
-<div class="col-12"><input type="text" id="prov_mkt" class="form-control form-control-sm" value="Provinsi" required></div>
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="mb-3">
-
-
-
-<label class="small fw-bold">MINAT TABUNGAN</label>
-
-
-
-<select id="tab_mkt" class="form-select select-prospek">
-
-
-
-<option value="Tidak Berminat">--- Tidak Berminat ---</option>
-
-
-
-<option value="Tabungan Umum">Tabungan Umum</option>
-
-
-
-<option value="Tabungan Arisan">Tabungan Arisan</option>
-
-
-
-<option value="Tabungan Pelajar">Tabungan Pelajar</option>
-
-
-
-<option value="Tabungan Berjangka">Tabungan Berjangka</option>
-
-
-
-</select>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="mb-3">
-
-
-
-<label class="small fw-bold">MINAT DEPOSITO</label>
-
-
-
-<select id="dep_mkt" class="form-select select-prospek">
-
-
-
-<option value="Tidak Berminat">--- Tidak Berminat ---</option>
-
-
-
-<option value="Deposito 1-3 Bln">Deposito 1-3 Bulan</option>
-
-
-
-<option value="Deposito 6 Bln">Deposito 6 Bulan</option>
-
-
-
-<option value="Deposito 12 Bln">Deposito 12 Bulan</option>
-
-
-
-</select>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div id="areaNominalMkt" class="p-3 border rounded bg-light mb-3" style="display:none;">
-
-
-
-<label class="small fw-bold text-success">RENCANA NOMINAL (Rp):</label>
-
-
-
-<input type="text" id="nom_mkt_display" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
-
-
-
-</div>
+                <label class="small fw-bold">NAMA CALON NASABAH</label>
+                <input type="text" id="n_mkt" class="form-control" placeholder="Nama lengkap" required>
             </div>
-
+            <div class="mb-3">
+                <label class="small fw-bold">NO. WHATSAPP (WA)</label>
+                <input type="tel" id="wa_mkt" class="form-control" placeholder="0812..." required>
+            </div>
+            <div class="p-3 border rounded bg-light mb-3">
+                <label class="small fw-bold mb-2 text-muted"><i class="bi bi-geo-alt-fill"></i> ALAMAT LENGKAP</label>
+                <textarea id="alamat_mkt" class="form-control mb-2" rows="2" placeholder="Jalan / RT / RW" required></textarea>
+                <div class="row g-2">
+                    <div class="col-6"><input type="text" id="kel_mkt" class="form-control form-control-sm" placeholder="Kelurahan" required></div>
+                    <div class="col-6"><input type="text" id="kota_mkt" class="form-control form-control-sm" placeholder="Kota/Kab" required></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">MINAT TABUNGAN</label>
+                <select id="tab_mkt" class="form-select select-prospek">
+                    <option value="Tidak Berminat">--- Tidak Berminat ---</option>
+                    <option value="Tabungan Umum">Tabungan Umum</option>
+                    <option value="Tabungan Arisan">Tabungan Arisan</option>
+                    <option value="Tabungan Pelajar">Tabungan Pelajar</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold">MINAT DEPOSITO</label>
+                <select id="dep_mkt" class="form-select select-prospek">
+                    <option value="Tidak Berminat">--- Tidak Berminat ---</option>
+                    <option value="Deposito 1-3 Bln">Deposito 1-3 Bulan</option>
+                    <option value="Deposito 6 Bln">Deposito 6 Bulan</option>
+                </select>
+            </div>
             <div id="areaNominalMkt" class="p-3 border rounded bg-light mb-3" style="display:none;">
                 <label class="small fw-bold text-success">RENCANA NOMINAL (Rp):</label>
                 <input type="text" id="nom_mkt_display" class="form-control fw-bold" placeholder="Rp 0" onkeyup="formatRupiah(this)">
             </div>
-
             <div class="mb-4">
                 <div class="preview-box" id="box_mkt" onclick="document.getElementById('f_mkt').click()">
                     <i class="bi bi-camera-fill fs-1 text-success"></i>
                 </div>
                 <input type="file" id="f_mkt" class="d-none" accept="image/*" capture="camera" onchange="handleFile(this, 'box_mkt')">
             </div>
-            <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow">SIMPAN PROSPEK</button>
+            <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow">SIMPAN PROSPEK FUNDING</button>
         </form>
     </div>
 </div>
 
-<div id="pageHistory" class="section p-3">
-    <h6 class="fw-bold text-muted mb-3">RIWAYAT AKTIVITAS HARI INI</h6>
-    <div id="logList" class="bg-white rounded-4 shadow-sm p-3">
-        <div class="text-center py-5 text-muted small">Belum ada aktivitas.</div>
-    </div>
-</div>
-
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
     <a href="javascript:void(0)" id="nav_pageHome" class="nav-link active" onclick="showPage('pageHome')"><i class="bi bi-house-door"></i>HOME</a>
     <a href="javascript:void(0)" id="nav_pageColl" class="nav-link" onclick="showPage('pageColl')"><i class="bi bi-wallet2"></i>KOLEKSI</a>
-    <a href="javascript:void(0)" id="nav_pageMkt" class="nav-link" onclick="showPage('pageMkt')"><i class="bi bi-person-plus"></i>MARKETING</a>
-    <a href="javascript:void(0)" id="nav_pageHistory" class="nav-link" onclick="showPage('pageHistory')"><i class="bi bi-clock-history"></i>RIWAYAT</a>
+    <a href="javascript:void(0)" id="nav_pageKredit" class="nav-link" onclick="showPage('pageKredit')"><i class="bi bi-cash-coin"></i>KREDIT</a>
+    <a href="javascript:void(0)" id="nav_pageMkt" class="nav-link" onclick="showPage('pageMkt')"><i class="bi bi-person-plus"></i>FUNDING</a>
 </div>
 
 <script>
@@ -449,7 +337,6 @@
             syncData();
         }
 
-        // Event listener untuk logic dinamis Koleksi
         const sColl = document.getElementById('s_coll');
         if(sColl) {
             sColl.addEventListener('change', function() {
@@ -458,7 +345,6 @@
             });
         }
 
-        // Event listener untuk logic dinamis Marketing
         document.querySelectorAll('.select-prospek').forEach(el => {
             el.addEventListener('change', () => {
                 const tab = document.getElementById('tab_mkt').value;
@@ -511,10 +397,24 @@
                 payload.nominal = cleanRupiah(document.getElementById('nom_coll_display').value);
                 payload.tglJanji = document.getElementById('tglJanji').value;
                 payload.bertemu = document.getElementById('bertemu').value;
-            } else {
+                payload.usaha = document.getElementById('usahaDebitur').value;
+                payload.penyebab = document.getElementById('penyebab').value;
+                payload.kendala = document.getElementById('kendala').value;
+            } else if (type === 'SAVE_KREDIT') {
+                payload.nasabah = document.getElementById('n_kredit').value;
+                payload.wa = document.getElementById('wa_kredit').value;
+                payload.plafon = cleanRupiah(document.getElementById('plafon_kredit').value);
+                payload.tenor = document.getElementById('tenor_kredit').value;
+                payload.tujuan = document.getElementById('tujuan_kredit').value;
+                payload.alamat = document.getElementById('alamat_kredit').value;
+                payload.kelurahan = document.getElementById('kel_kredit').value;
+                payload.kota = document.getElementById('kota_kredit').value;
+            } else if (type === 'SAVE_MARKETING') {
                 payload.nasabah = document.getElementById('n_mkt').value;
                 payload.wa = document.getElementById('wa_mkt').value;
                 payload.alamat = document.getElementById('alamat_mkt').value;
+                payload.kelurahan = document.getElementById('kel_mkt').value;
+                payload.kota = document.getElementById('kota_mkt').value;
                 payload.tabungan = document.getElementById('tab_mkt').value;
                 payload.deposito = document.getElementById('dep_mkt').value;
                 payload.nominal = cleanRupiah(document.getElementById('nom_mkt_display').value);
@@ -522,7 +422,7 @@
 
             setLoading(true, "Mengirim Data ke Server...");
             try {
-                const response = await fetch(WEB_APP_URL, { 
+                await fetch(WEB_APP_URL, { 
                     method: 'POST', 
                     body: JSON.stringify(payload) 
                 });
@@ -539,6 +439,7 @@
     }
 
     document.getElementById('formCollection').onsubmit = (e) => submitForm(e, 'SAVE_COLLECTION');
+    document.getElementById('formKredit').onsubmit = (e) => submitForm(e, 'SAVE_KREDIT');
     document.getElementById('formMarketing').onsubmit = (e) => submitForm(e, 'SAVE_MARKETING');
 
     function formatRupiah(el) {
