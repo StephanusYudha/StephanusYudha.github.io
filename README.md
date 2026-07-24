@@ -10,8 +10,6 @@
             --bkk-blue: #003366; 
             --bkk-gold: #FFD700; 
             --bkk-light: #f1f5f9; 
-            --bkk-success: #198754; 
-            --bkk-danger: #dc3545; 
         }
         body { 
             background: var(--bkk-light); 
@@ -19,7 +17,6 @@
             padding-bottom: 90px; 
             overflow-x: hidden; 
         }
-        
         .header-app { 
             background: linear-gradient(135deg, var(--bkk-blue) 0%, #004a99 100%); 
             color: white; 
@@ -28,7 +25,6 @@
             border-radius: 0 0 35px 35px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-
         .stats-card { 
             background: white; 
             border-radius: 20px; 
@@ -37,21 +33,18 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
             border: 1px solid rgba(0,0,0,0.05);
         }
-
         .section { display: none; animation: slideUp 0.4s ease-out; }
         .section.active { display: block; }
         @keyframes slideUp { 
             from { opacity: 0; transform: translateY(20px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
-
         .form-control, .form-select { 
             border-radius: 10px; 
             padding: 12px; 
             border: 1px solid #e2e8f0; 
             font-size: 0.95rem; 
         }
-
         .preview-box { 
             width: 100%; 
             height: 200px; 
@@ -65,7 +58,6 @@
             cursor: pointer;
         }
         .preview-box img { width: 100%; height: 100%; object-fit: cover; }
-
         .bottom-nav { 
             position: fixed; 
             bottom: 0; 
@@ -87,7 +79,6 @@
         }
         .nav-link.active { color: var(--bkk-blue); }
         .nav-link i { font-size: 1.2rem; display: block; }
-
         #loader { 
             display: none; 
             position: fixed; 
@@ -118,7 +109,7 @@
                 <i class="bi bi-bank2 text-white fs-1"></i>
             </div>
             <h2 class="fw-bold m-0" style="color: var(--bkk-blue);">AMORE</h2>
-            <p class="text-muted small">Enterprise Reporting v2.7</p>
+            <p class="text-muted small">Enterprise Reporting v2.8</p>
         </div>
         <form id="formLogin" class="bg-white p-4 rounded-4 shadow-sm border">
             <input type="text" id="user" class="form-control mb-3" placeholder="Username (misal: marketing1)" required>
@@ -142,7 +133,7 @@
 <!-- PAGE HOME -->
 <div id="pageHome" class="section active">
     <div class="stats-card">
-        <small class="text-muted fw-bold">REALISASI SETORAN HARI INI</small>
+        <small class="text-muted fw-bold">REALISASI SETORAN HARI INI (PRIBADI)</small>
         <h2 id="dashSetoran" class="fw-bold text-primary my-1">Rp 0</h2>
         <div class="progress mt-3" style="height: 10px; border-radius: 10px;">
             <div id="barTarget" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
@@ -414,7 +405,7 @@
 
 <script>
     // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbznPHn3pa4JmwKPpoakO3M7N_eMx3BPbw92wC-Hzlga8ekqU3ASuMI2gJlLdkBWg-CcGA/exec"; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwmuMgo5MP3N3a5n9SaZcBdK2Ng0DIEItTkoS4GhmHMe1YeJc7x4532TqLJYF5oFSWOTA/exec"; 
     
     let currentPhoto = "";
     let rawHistoryData = [];
@@ -446,7 +437,6 @@
         });
     };
 
-    // Integrasi Login dengan Google Apps Script Database (Sheet Users)
     document.getElementById('formLogin').onsubmit = async function(e) {
         e.preventDefault();
         const userVal = document.getElementById('user').value.trim();
@@ -486,7 +476,10 @@
 
     async function syncData() {
         try {
-            const res = await fetch(`${WEB_APP_URL}?action=init`).then(r => r.json());
+            const user = JSON.parse(localStorage.getItem('userData'));
+            // Kirim parameter petugas agar total setoran dihitung spesifik per user
+            const res = await fetch(`${WEB_APP_URL}?action=init&petugas=${encodeURIComponent(user.nama)}`).then(r => r.json());
+            
             if(res.totalSetoran !== undefined) {
                 document.getElementById('dashSetoran').innerText = `Rp ${Number(res.totalSetoran).toLocaleString('id-ID')}`;
                 document.getElementById('barTarget').style.width = `${res.persenTarget || 0}%`;
