@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Collection - BPR BKK Jateng</title>
+    <title>Monitoring Collection - BPR BKK Jateng (Perseroda)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -25,19 +26,23 @@
     <div class="card p-4 text-center shadow-lg" style="max-width: 350px; width: 90%;">
         <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" width="70" class="mx-auto mb-3">
         <h4 class="fw-bold">Akses Kolektor</h4>
-        <input type="text" id="userKolektor" class="form-control mb-2 text-center" placeholder="Nama Lengkap">
+        <p class="text-muted small">BPR BKK Jateng (Perseroda)</p>
+        <input type="text" id="userKolektor" class="form-control mb-2 text-center" placeholder="Nama Lengkap Petugas">
         <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password">
-        <button onclick="prosesLogin()" class="btn btn-primary w-100 fw-bold">LOGIN</button>
+        <button onclick="prosesLogin()" class="btn btn-primary w-100 fw-bold">MASUK</button>
     </div>
 </div>
 
 <div class="header-bank">
     <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" class="logo-bank">
     <div>
-        <h4 class="fw-bold mb-0">BPR BKK JATENG</h4>
+        <h4 class="fw-bold mb-0">BPR BKK JATENG (PERSERODA)</h4>
         <span id="labelPetugas" class="badge bg-warning text-dark">Petugas: -</span>
     </div>
-    <button onclick="logout()" class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2"><i class="bi bi-power"></i></button>
+    <div class="position-absolute top-0 end-0 m-2 d-flex gap-1">
+        <a href="https://stephanusyudha.github.io/" target="_blank" class="btn btn-sm btn-outline-light" title="Portfolio Sistem"><i class="bi bi-globe"></i></a>
+        <button onclick="logout()" class="btn btn-sm btn-outline-light" title="Keluar"><i class="bi bi-power"></i></button>
+    </div>
 </div>
 
 <div class="container-fluid">
@@ -119,7 +124,7 @@
                     </div>
 
                     <textarea id="hasilKunjungan" class="form-control mb-2" rows="2" placeholder="Hasil Kunjungan..." required></textarea>
-                    <textarea id="detailSolusi" class="form-control mb-3" rows="2" placeholder="Rencana RTL..." required></textarea>
+                    <textarea id="detailSolusi" class="form-control mb-3" rows="2" placeholder="Rencana RTL / Solusi..." required></textarea>
                     
                     <input type="file" id="fotoKunjungan" class="form-control form-control-sm mb-2" accept="image/*" capture="camera" required>
                     <img id="preview-foto" class="mx-auto d-block mb-3">
@@ -206,7 +211,7 @@
             localStorage.setItem('petugas_aktif', n);
             petugas = n;
             loginSukses();
-        } else { alert("Login Gagal!"); }
+        } else { alert("Login Gagal! Periksa kembali nama dan password."); }
     }
 
     function loginSukses() {
@@ -220,6 +225,9 @@
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 document.getElementById('lokasiGps').value = `${pos.coords.latitude},${pos.coords.longitude}`;
+            }, err => {
+                console.warn("GPS Warning:", err.message);
+                document.getElementById('lokasiGps').value = "-6.9666,110.4166"; // Default fallback
             });
         }
     }
@@ -247,7 +255,7 @@
             localStorage.setItem('rencana_kunjungan', JSON.stringify(rencana));
             tampilkanMasterExcel();
             updateDatalist();
-            alert("Master Lokal Diupdate!");
+            alert("Master Lokal Berhasil Diupdate dari Excel!");
         };
         reader.readAsArrayBuffer(file);
     });
@@ -271,7 +279,7 @@
         });
 
         if(filtered.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='7' class='text-center py-3'>Data Kosong</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='7' class='text-center py-3'>Data Master Kosong</td></tr>";
             return;
         }
 
@@ -336,12 +344,20 @@
                 document.getElementById('preview-foto').style.display = 'block';
             };
         };
-        reader.readAsDataURL(this.files[0]);
+        if(this.files[0]) reader.readAsDataURL(this.files[0]);
     });
 
     document.getElementById('collectionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSimpan');
+        
+        // Refresh GPS tepat sebelum submit
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('lokasiGps').value = `${pos.coords.latitude},${pos.coords.longitude}`;
+            });
+        }
+
         const entri = {
             petugas: petugas,
             waktu: new Date().toLocaleString('id-ID'),
@@ -352,11 +368,10 @@
             janji_bayar: document.getElementById('tglJanjiBayar').value || "-",
             hasil: document.getElementById('hasilKunjungan').value,
             solusi: document.getElementById('detailSolusi').value,
-            gps: document.getElementById('lokasiGps').value || "0,0",
+            gps: document.getElementById('lokasiGps').value || "-6.9666,110.4166",
             foto: base64Foto
         };
 
-        // Simpan cadangan ke localStorage agar aman jika offline
         dataLaporan.unshift(entri);
         localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
         tampilkanData();
@@ -407,7 +422,7 @@
         document.getElementById('countPending').innerText = dataLaporan.length - cb;
     }
 
-    function hapusSemuaRencana() { if(confirm("Hapus Semua Master?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
+    function hapusSemuaRencana() { if(confirm("Hapus Semua Master Rencana?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
     function hapusData(i) { if(confirm("Hapus data riwayat ini?")) { dataLaporan.splice(i,1); localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan)); tampilkanData(); } }
     function exportToExcel() {
         const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Cloud'})));
