@@ -1,392 +1,408 @@
-<html lang="id" class="h-full">
+
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gereja Kasih Karunia - Portal Pelayanan & Aksi Sosial</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            800: '#166534',
-                            900: '#14532d',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <title>Monitoring Collection - BPR BKK Jateng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .conditional-field { display: none; }
-        .conditional-field.show { display: block; }
-        #auth-overlay { display: flex; }
-        #auth-overlay.hidden-auth { display: none; }
+        :root { --bkk-blue: #004a99; --bkk-gold: #ffcc00; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .header-bank { background: var(--bkk-blue); color: white; padding: 20px; border-bottom: 5px solid var(--bkk-gold); margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
+        .logo-bank { width: 65px; background: white; padding: 5px; border-radius: 10px; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,74,153,0.98); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        #preview-foto { max-width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-top: 10px; border: 2px solid #ddd; }
+        .img-table { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; }
+        .rekap-box { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--bkk-gold); }
+        .sticky-table { max-height: 350px; overflow-y: auto; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans flex flex-col min-h-full">
+<body>
 
-    <!-- LOGIN / AUTHENTICATION OVERLAY -->
-    <div id="auth-overlay" class="fixed inset-0 z-50 items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-100">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow-lg">
-                    <i class="fa-solid fa-lock"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900">Autentikasi Masuk</h2>
-                <p class="text-sm text-slate-500 mt-1">Masukkan ID Pengguna dan Kata Sandi untuk mengakses portal</p>
+<div id="loginOverlay">
+    <div class="card p-4 text-center shadow-lg" style="max-width: 350px; width: 90%;">
+        <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" width="70" class="mx-auto mb-3">
+        <h4 class="fw-bold">Akses Kolektor</h4>
+        <input type="text" id="userKolektor" class="form-control mb-2 text-center" placeholder="Nama Lengkap">
+        <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password">
+        <button onclick="prosesLogin()" class="btn btn-primary w-100 fw-bold">LOGIN</button>
+    </div>
+</div>
+
+<div class="header-bank">
+    <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" class="logo-bank">
+    <div>
+        <h4 class="fw-bold mb-0">BPR BKK JATENG</h4>
+        <span id="labelPetugas" class="badge bg-warning text-dark">Petugas: -</span>
+    </div>
+    <button onclick="logout()" class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2"><i class="bi bi-power"></i></button>
+</div>
+
+<div class="container-fluid">
+    <div class="card p-3 mb-4 border-success">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-success mb-0"><i class="bi bi-database-check"></i> Data Master Rencana Kunjungan</h6>
+            <button onclick="tarikMasterCloud()" id="btnTarikCloud" class="btn btn-sm btn-success fw-bold">
+                <i class="bi bi-cloud-download"></i> TARIK DATA PUSAT
+            </button>
+        </div>
+        
+        <div class="row g-2 mb-3">
+            <div class="col-md-3">
+                <label class="small fw-bold">Import Excel:</label>
+                <input type="file" id="importExcel" class="form-control form-control-sm border-success" accept=".xlsx, .xls">
             </div>
-
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">ID Pengguna</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-user-shield"></i></span>
-                        <input type="text" id="loginId" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="Contoh: admin">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Kata Sandi (Password)</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-key"></i></span>
-                        <input type="password" id="loginPass" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="••••••••">
-                    </div>
-                </div>
-
-                <div id="loginError" class="hidden text-rose-500 text-xs font-medium text-center bg-rose-50 py-2 rounded-lg">
-                    ID atau Kata Sandi salah. (Coba: ID: <b>admin</b>, Pass: <b>12345</b>)
-                </div>
-
-                <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-emerald-600/20 transition duration-200 mt-2">
-                    Masuk ke Portal
-                </button>
-            </form>
-            <div class="mt-4 text-center">
-                <p class="text-xs text-slate-400">Default Login Demo — ID: <span class="font-semibold text-slate-600">admin</span> | Pass: <span class="font-semibold text-slate-600">12345</span></p>
+            <div class="col-md-3">
+                <label class="small fw-bold">Cari Nama/Alamat:</label>
+                <input type="text" id="searchMaster" class="form-control form-control-sm" placeholder="Ketik..." onkeyup="tampilkanMasterExcel()">
             </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">Filter Tanggal:</label>
+                <input type="date" id="filterTglMaster" class="form-control form-control-sm" onchange="tampilkanMasterExcel()">
+            </div>
+            <div class="col-md-3 text-end">
+                <label class="d-none d-md-block">&nbsp;</label>
+                <button onclick="hapusSemuaRencana()" class="btn btn-sm btn-danger w-100 fw-bold">HAPUS MASTER</button>
+            </div>
+        </div>
+
+        <div class="table-responsive sticky-table border rounded">
+            <table class="table table-sm table-striped mb-0">
+                <thead class="table-success small sticky-top">
+    <tr>
+        <th style="width: 25%">Nama</th>
+        <th style="width: 30%">Alamat</th>
+        <th style="width: 15%" class="text-end">OS</th>
+        <th style="width: 15%" class="text-end">Tagihan</th>
+        <th style="width: 10%" class="text-center">Tgl</th>
+        <th style="width: 5%" class="text-center">WA</th>
+    </tr>
+</thead>
+                <tbody id="tbodyMasterExcel" class="small"></tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Top Bar / Header -->
-    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('beranda')">
-                    <div class="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                        <i class="fa-solid fa-church"></i>
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold text-primary mb-3">Laporan Lapangan</h5>
+                <form id="collectionForm">
+                    <label class="small fw-bold">Nama Nasabah:</label>
+                    <input type="text" id="namaNasabah" class="form-control mb-2" list="listNasabah" required onchange="autoFillAlamat()">
+                    <datalist id="listNasabah"></datalist>
+
+                    <label class="small fw-bold">Alamat:</label>
+                    <textarea id="alamatNasabah" class="form-control mb-3 bg-light" rows="2" readonly></textarea>
+
+                    <select id="bertemuDengan" class="form-select mb-3" required>
+                        <option value="" disabled selected>Bertemu Dengan...</option>
+                        <option value="Debitur">Debitur</option>
+                        <option value="Keluarga">Keluarga</option>
+                        <option value="Tidak Ada Orang">Tidak Ada Orang</option>
+                    </select>
+
+                    <select id="statusKunjungan" class="form-select mb-3" required onchange="cekStatusJanji()">
+                        <option value="" disabled selected>Status Penagihan...</option>
+                        <option value="Janji Bayar">Janji Bayar</option>
+                        <option value="Bayar Sebagian">Bayar Sebagian</option>
+                        <option value="Titip Angsuran">Titip Angsuran</option>
+                        <option value="Rumah Kosong">Rumah Kosong</option>
+                    </select>
+
+                    <div id="areaJanjiBayar" class="mb-3 p-2 border border-danger rounded shadow-sm" style="display: none;">
+                        <label class="small fw-bold text-danger">TANGGAL JANJI BAYAR:</label>
+                        <input type="date" id="tglJanjiBayar" class="form-control form-control-sm">
                     </div>
-                    <div>
-                        <span class="text-xl font-bold tracking-wide block">Gereja Kasih Karunia</span>
-                        <span class="text-xs text-emerald-400 tracking-wider uppercase font-medium">Portal Resmi & Layanan Umat</span>
-                    </div>
-                </div>
-                
-                <!-- Desktop Nav -->
-                <nav class="hidden md:flex items-center space-x-2">
-                    <button onclick="switchTab('beranda')" id="nav-beranda" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200 bg-emerald-600 text-white shadow-sm">
-                        <i class="fa-solid fa-house mr-2"></i> Beranda
-                    </button>
-                    <button onclick="switchTab('form')" id="nav-form" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200 text-slate-300 hover:bg-slate-800 hover:text-white">
-                        <i class="fa-solid fa-file-lines mr-2"></i> Formulir Layanan & Aksi
-                    </button>
-                    <button onclick="logout()" class="px-3 py-2 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition duration-200 ml-4" title="Keluar Akun">
-                        <i class="fa-solid fa-right-from-bracket"></i> Keluar
-                    </button>
-                </nav>
 
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center space-x-2">
-                    <button onclick="logout()" class="text-rose-400 p-2 text-xl" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
-                    <button id="mobile-menu-btn" class="text-slate-300 hover:text-white focus:outline-none text-2xl p-2">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mobile Nav Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-slate-800 border-t border-slate-700 px-4 pt-2 pb-4 space-y-1">
-            <button onclick="switchTab('beranda'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-emerald-600 text-white">Beranda</button>
-            <button onclick="switchTab('form'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-700 hover:text-white">Isi Formulir</button>
-            <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-rose-400 hover:bg-slate-700">Keluar Sistem</button>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-grow">
-
-        <!-- TAB 1: BERANDA -->
-        <section id="tab-beranda" class="tab-content active">
-            <!-- Hero Banner -->
-            <div class="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-                <div class="absolute inset-0 opacity-25 bg-[radial-gradient(#16a34a_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                <div class="relative max-w-4xl mx-auto text-center space-y-6">
-                    <span class="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <i class="fa-solid fa-hands-praying"></i> Selamat Datang di Rumah Tuhan
-                    </span>
-                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
-                        Bertumbuh dalam Iman, <span class="text-emerald-400">Melayani dengan Kasih</span>
-                    </h1>
-                    <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto font-light">
-                        Portal terpadu pendataan jemaah dan pendaftaran aksi sosial donor darah Gereja Kasih Karunia.
-                    </p>
-                    <div class="pt-4">
-                        <button onclick="switchTab('form')" class="inline-flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-8 py-4 rounded-xl shadow-lg transition duration-200">
-                            <i class="fa-solid fa-pen-to-square"></i> Buka Formulir Pendaftaran & Pendataan
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB 2: FORMULIR TERPADU -->
-        <section id="tab-form" class="tab-content py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-3xl mx-auto">
-                <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-                    <div class="bg-emerald-700 px-6 py-5 text-white flex items-center justify-between">
-                        <div>
-                            <h2 class="text-xl font-bold">Formulir Terpadu Jemaah & Donor Darah</h2>
-                            <p class="text-emerald-100 text-sm mt-0.5">Silakan pilih jenis keperluan Anda pada pilihan pertama.</p>
-                        </div>
-                        <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-xl">
-                            <i class="fa-solid fa-clipboard-list"></i>
-                        </div>
-                    </div>
+                    <textarea id="hasilKunjungan" class="form-control mb-2" rows="2" placeholder="Hasil Kunjungan..." required></textarea>
+                    <textarea id="detailSolusi" class="form-control mb-3" rows="2" placeholder="Rencana RTL..." required></textarea>
                     
-                    <form id="unifiedForm" class="p-6 sm:p-8 space-y-6" onsubmit="handleFormSubmit(event)">
-                        <!-- Pilihan Utama -->
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Tujuan Pengisian Formulir <span class="text-rose-500">*</span></label>
-                            <select id="tujuanForm" required onchange="toggleFormFields()" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium">
-                                <option value="">-- Pilih Tujuan Pengisian --</option>
-                                <option value="jemaah">Pendataan / Pembaruan Anggota Jemaah</option>
-                                <option value="donor">Pendaftaran Aksi Donor Darah (Umum / Jemaah)</option>
-                            </select>
-                        </div>
+                    <input type="file" id="fotoKunjungan" class="form-control form-control-sm mb-2" accept="image/*" capture="camera" required>
+                    <img id="preview-foto" class="mx-auto d-block mb-3">
+                    
+                    <input type="hidden" id="lokasiGps">
+                    <button type="submit" id="btnSimpan" class="btn btn-primary btn-lg w-100 fw-bold">SIMPAN & SINKRON</button>
+                    <div id="syncStatus" class="text-center mt-2 small"></div>
+                </form>
+            </div>
+        </div>
 
-                        <!-- Data Umum (Selalu Muncul) -->
-                        <div class="space-y-6 border-t border-slate-100 pt-6">
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Lengkap <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
-                                    <input type="text" id="nama" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="Nama lengkap sesuai identitas">
-                                </div>
-                            </div>
+        <div class="col-lg-8">
+            <div class="rekap-box d-flex justify-content-around text-center shadow-sm">
+                <div><small>Total</small><h4 id="countTotal" class="fw-bold">0</h4></div>
+                <div class="text-success"><small>Bayar</small><h4 id="countBayar" class="fw-bold">0</h4></div>
+                <div class="text-danger"><small>Pending</small><h4 id="countPending" class="fw-bold">0</h4></div>
+            </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Nomor WhatsApp / HP Aktif <span class="text-rose-500">*</span></label>
-                                    <div class="relative">
-                                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-brands fa-whatsapp text-lg"></i></span>
-                                        <input type="tel" id="whatsapp" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="08xxxxxxxxxx">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Alamat Domisili <span class="text-rose-500">*</span></label>
-                                    <input type="text" id="alamat" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="Alamat tempat tinggal saat ini">
-                                </div>
-                            </div>
-
-                            <!-- Tambahan Kolom Baru: Tanggal Lahir, Golongan Darah, Wilayah -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tanggal Lahir <span class="text-rose-500">*</span></label>
-                                    <input type="date" id="tanggalLahirUmum" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Golongan Darah <span class="text-rose-500">*</span></label>
-                                    <select id="golDarahUmum" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm">
-                                        <option value="">Pilih Gol. Darah</option>
-                                        <option value="A">A</option>
-                                        <option value="B">B</option>
-                                        <option value="AB">AB</option>
-                                        <option value="O">O</option>
-                                        <option value="Tidak Tahu">Belum Tahu</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Wilayah / Sektor <span class="text-rose-500">*</span></label>
-                                    <input type="text" id="wilayahUmum" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="Contoh: Sektor 3 / Ungaran">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- KONDISIONAL: Khusus Jemaah -->
-                        <div id="sectionJemaah" class="conditional-field space-y-6 border-t border-slate-100 pt-6">
-                            <div class="bg-emerald-50 p-4 rounded-xl text-xs text-emerald-800 font-medium">
-                                <i class="fa-solid fa-circle-info mr-1"></i> Melengkapi data administratif tambahan warga jemaah Gereja Kasih Karunia.
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Tempat Lahir</label>
-                                    <input type="text" id="tempatLahir" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="Kota Kelahiran">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Jenis Kelamin</label>
-                                    <select id="gender" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm">
-                                        <option value="">Pilih Jenis Kelamin</option>
-                                        <option value="Laki-laki">Laki-laki</option>
-                                        <option value="Perempuan">Perempuan</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- KONDISIONAL: Khusus Donor Darah -->
-                        <div id="sectionDonor" class="conditional-field space-y-6 border-t border-slate-100 pt-6">
-                            <div class="bg-rose-50 p-4 rounded-xl text-xs text-rose-800 font-medium">
-                                <i class="fa-solid fa-heart-pulse mr-1"></i> Terbuka untuk jemaah maupun masyarakat umum. Syarat: Sehat, usia 17-60 tahun, berat min. 45 kg.
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Nomor NIK / KTP</label>
-                                    <input type="text" id="nik" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm" placeholder="16 digit NIK">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Status Anda Terhadap Gereja</label>
-                                    <select id="statusKeanggotaan" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm">
-                                        <option value="">Pilih Status</option>
-                                        <option value="Jemaah">Jemaah Gereja Kasih Karunia</option>
-                                        <option value="Umum">Masyarakat Umum / Luar Gereja</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Aksi -->
-                        <div class="pt-4 flex gap-4">
-                            <button type="button" onclick="switchTab('beranda')" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3.5 rounded-xl transition duration-200 text-sm">Batal</button>
-                            <button type="submit" class="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-emerald-600/20 transition duration-200 text-sm">Kirim Formulir</button>
-                        </div>
-                    </form>
+            <div class="card p-3">
+                <div class="d-flex justify-content-between mb-3">
+                    <input type="text" id="cariLaporan" class="form-control w-50" placeholder="Cari Riwayat..." onkeyup="tampilkanData()">
+                    <button onclick="exportToExcel()" class="btn btn-success btn-sm fw-bold">UNDUH EXCEL</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover border">
+                        <thead class="table-dark small">
+                            <tr><th>Foto</th><th>Nasabah</th><th>Status</th><th>Aksi</th></tr>
+                        </thead>
+                        <tbody id="tbodyLaporan" class="small"></tbody>
+                    </table>
                 </div>
             </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-10 mt-auto border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-            <p class="text-sm">&copy; 2026 Gereja Kasih Karunia. Melayani dengan Kasih dan Ketulusan.</p>
-        </div>
-    </footer>
-
-    <!-- Notification Modal -->
-    <div id="successModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <h3 id="modalTitle" class="text-lg font-bold text-slate-900 mb-2">Berhasil!</h3>
-            <p id="modalMessage" class="text-sm text-slate-600 mb-6">Data Anda telah berhasil direkam.</p>
-            <button onclick="closeModal()" class="w-full py-3 bg-slate-900 text-white rounded-xl font-medium text-sm hover:bg-slate-800 transition">Tutup</button>
         </div>
     </div>
+</div>
 
-    <!-- Script Logika -->
-    <script>
-        function handleLogin(e) {
-            e.preventDefault();
-            const idInput = document.getElementById('loginId').value.trim();
-            const passInput = document.getElementById('loginPass').value.trim();
-            const errorDiv = document.getElementById('loginError');
+<script>
+    const MASTER_PASS = "bkk123";
+    // GANTI URL DI BAWAH DENGAN URL WEB APP ANDA
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB0FVMQ6ORqq9JHI2Cu_KOhNPk9nxkmRYRYiMmNYa1JpNznmXT_iBVzOSnHE5miVo0/exec";
+    
+    let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
+    let petugas = localStorage.getItem('petugas_aktif') || "";
+    let base64Foto = "";
 
-            if (idInput === 'admin' && passInput === '12345') {
-                document.getElementById('auth-overlay').classList.add('hidden-auth');
-                errorDiv.classList.add('hidden');
+    window.onload = () => {
+        if(petugas) loginSukses();
+        getGPS();
+        tampilkanData();
+        tampilkanMasterExcel();
+        updateDatalist();
+    };
+
+    // --- SINKRONISASI CLOUD ---
+    async function tarikMasterCloud() {
+        const btn = document.getElementById('btnTarikCloud');
+        const originalText = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const dataCloud = await response.json();
+
+            if (Array.isArray(dataCloud) && dataCloud.length > 0) {
+                localStorage.setItem('rencana_kunjungan', JSON.stringify(dataCloud));
+                tampilkanMasterExcel();
+                updateDatalist();
+                alert("Berhasil menarik " + dataCloud.length + " data dari Cloud!");
             } else {
-                errorDiv.classList.remove('hidden');
+                alert("Data Cloud kosong atau Sheet 'Master' tidak ditemukan.");
             }
+        } catch (err) {
+            console.error(err);
+            alert("Gagal koneksi ke Cloud. Periksa internet atau URL Script.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
+    }
 
-        function logout() {
-            document.getElementById('loginId').value = '';
-            document.getElementById('loginPass').value = '';
-            document.getElementById('loginError').classList.add('hidden');
-            document.getElementById('auth-overlay').classList.remove('hidden-auth');
-            switchTab('beranda');
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = "nav-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200 text-slate-300 hover:bg-slate-800 hover:text-white";
+    // --- AUTH ---
+    function prosesLogin() {
+        const n = document.getElementById('userKolektor').value;
+        const p = document.getElementById('passKolektor').value;
+        if (n && p === MASTER_PASS) {
+            localStorage.setItem('petugas_aktif', n);
+            petugas = n;
+            loginSukses();
+        } else { alert("Login Gagal!"); }
+    }
+    function loginSukses() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('labelPetugas').innerText = "Petugas: " + petugas;
+    }
+    function logout() { localStorage.removeItem('petugas_aktif'); location.reload(); }
+    function getGPS() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('lokasiGps').value = `${pos.coords.latitude},${pos.coords.longitude}`;
             });
-            const activeBtn = document.getElementById('nav-' + tabName);
-            if(activeBtn) {
-                activeBtn.className = "nav-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200 bg-emerald-600 text-white shadow-sm";
+        }
+    }
+
+    // --- EXCEL & MASTER LOGIC ---
+    document.getElementById('importExcel').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+            const rencana = [];
+            for (let i = 1; i < rows.length; i++) {
+                if(rows[i][0]) {
+                    rencana.push({
+                        nama: String(rows[i][0]),
+                        alamat: rows[i][1] || "-",
+                        os: rows[i][2] || 0,
+                        telp: rows[i][3] || "-",
+                        tagihan: rows[i][4] || 0,
+                        tanggal: formatTgl(rows[i][5])
+                    });
+                }
             }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            localStorage.setItem('rencana_kunjungan', JSON.stringify(rencana));
+            tampilkanMasterExcel();
+            updateDatalist();
+            alert("Master Lokal Diupdate!");
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function formatTgl(v) {
+        if(v instanceof Date) return v.toISOString().split('T')[0];
+        return String(v);
+    }
+
+    function tampilkanMasterExcel() {
+        const tbody = document.getElementById('tbodyMasterExcel');
+        const search = document.getElementById('searchMaster').value.toLowerCase();
+        const filterTgl = document.getElementById('filterTglMaster').value;
+        const data = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+        
+        tbody.innerHTML = "";
+        const filtered = data.filter(i => {
+            const mS = i.nama.toLowerCase().includes(search) || i.alamat.toLowerCase().includes(search);
+            const mD = filterTgl ? i.tanggal === filterTgl : true;
+            return mS && mD;
+        });
+
+        if(filtered.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='7' class='text-center py-3'>Data Kosong</td></tr>";
+            return;
         }
 
-        function toggleFormFields() {
-            const val = document.getElementById('tujuanForm').value;
-            const secJemaah = document.getElementById('sectionJemaah');
-            const secDonor = document.getElementById('sectionDonor');
+        filtered.forEach(item => {
+            const row = tbody.insertRow();
+            const wa = item.telp.toString().replace(/^0/, '62').replace(/\D/g, '');
+            row.innerHTML = `
+                <td><button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="pilihNasabah('${item.nama.replace(/'/g, "\\'")}')">${item.nama}</button></td>
+                <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${item.alamat}</td>
+                <td class="text-end">${Number(item.os).toLocaleString('id-ID')}</td>
+                <td>${item.telp}</td>
+                <td class="text-end fw-bold text-danger">${Number(item.tagihan).toLocaleString('id-ID')}</td>
+                <td><span class="badge bg-secondary">${item.tanggal}</span></td>
+                <td><a href="https://wa.me/${wa}" target="_blank" class="text-success"><i class="bi bi-whatsapp"></i></a></td>
+            `;
+        });
+    }
 
-            // Reset requirement
-            document.getElementById('tempatLahir').required = false;
-            document.getElementById('gender').required = false;
-            document.getElementById('nik').required = false;
-            document.getElementById('statusKeanggotaan').required = false;
+    function updateDatalist() {
+        const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+        const dl = document.getElementById('listNasabah');
+        dl.innerHTML = "";
+        master.forEach(n => {
+            let opt = document.createElement('option');
+            opt.value = n.nama;
+            dl.appendChild(opt);
+        });
+    }
 
-            secJemaah.classList.remove('show');
-            secDonor.classList.remove('show');
+    function autoFillAlamat() {
+        const nama = document.getElementById('namaNasabah').value;
+        const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+        const ketemu = master.find(u => u.nama.toLowerCase() === nama.toLowerCase());
+        document.getElementById('alamatNasabah').value = ketemu ? (ketemu.alamat || ketemu.ALAMAT) : "";
+    }
 
-            if(val === 'jemaah') {
-                secJemaah.classList.add('show');
-                document.getElementById('tempatLahir').required = true;
-                document.getElementById('gender').required = true;
-            } else if(val === 'donor') {
-                secDonor.classList.add('show');
-                document.getElementById('nik').required = true;
-                document.getElementById('statusKeanggotaan').required = true;
+    function pilihNasabah(nama) {
+        document.getElementById('namaNasabah').value = nama;
+        autoFillAlamat();
+        window.scrollTo({ top: document.getElementById('collectionForm').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function cekStatusJanji() {
+        document.getElementById('areaJanjiBayar').style.display = (document.getElementById('statusKunjungan').value === "Janji Bayar") ? "block" : "none";
+    }
+
+    // --- FOTO LOGIC ---
+    document.getElementById('fotoKunjungan').addEventListener('change', function() {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image(); img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 600; canvas.height = img.height * (600 / img.width);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                base64Foto = canvas.toDataURL('image/jpeg', 0.6);
+                document.getElementById('preview-foto').src = base64Foto;
+                document.getElementById('preview-foto').style.display = 'block';
+            };
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    // --- FORM SUBMIT ---
+    document.getElementById('collectionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSimpan');
+        const entri = {
+            petugas: petugas,
+            waktu: new Date().toLocaleString('id-ID'),
+            nama: document.getElementById('namaNasabah').value,
+            alamat: document.getElementById('alamatNasabah').value,
+            bertemu: document.getElementById('bertemuDengan').value,
+            status: document.getElementById('statusKunjungan').value,
+            janji_bayar: document.getElementById('tglJanjiBayar').value || "-",
+            hasil: document.getElementById('hasilKunjungan').value,
+            solusi: document.getElementById('detailSolusi').value,
+            gps: document.getElementById('lokasiGps').value || "0,0",
+            foto: base64Foto
+        };
+
+        dataLaporan.unshift(entri);
+        localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
+        tampilkanData();
+
+        btn.disabled = true; btn.innerText = "SINKRON...";
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entri) });
+            document.getElementById('syncStatus').innerHTML = "<span class='text-success fw-bold'>✓ Sinkron Berhasil</span>";
+            this.reset();
+            base64Foto = "";
+            document.getElementById('preview-foto').style.display = 'none';
+            document.getElementById('areaJanjiBayar').style.display = 'none';
+        } catch (err) {
+            document.getElementById('syncStatus').innerHTML = "<span class='text-danger'>! Gagal Cloud (Tersimpan Lokal)</span>";
+        }
+        btn.disabled = false; btn.innerText = "SIMPAN & SINKRON";
+    });
+
+    function tampilkanData() {
+        const table = document.getElementById('tbodyLaporan');
+        const search = document.getElementById('cariLaporan').value.toLowerCase();
+        table.innerHTML = ""; let cb = 0;
+        dataLaporan.forEach((item, i) => {
+            if (item.nama.toLowerCase().includes(search)) {
+                const isB = item.status.match(/Bayar|Titip/);
+                if(isB) cb++;
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
+                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu}</small></td>
+                    <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
+                    <td><button onclick="hapusData(${i})" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></td>
+                `;
             }
-        }
+        });
+        document.getElementById('countTotal').innerText = dataLaporan.length;
+        document.getElementById('countBayar').innerText = cb;
+        document.getElementById('countPending').innerText = dataLaporan.length - cb;
+    }
 
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-        function toggleMobileMenu() { mobileMenu.classList.add('hidden'); }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const tujuan = document.getElementById('tujuanForm').value;
-            const msg = (tujuan === 'jemaah') 
-                ? 'Terima kasih, data jemaah Anda berhasil dikirim dan akan diverifikasi sekretariat.' 
-                : 'Pendaftaran donor darah berhasil! Panitia akan menghubungi Anda via WhatsApp.';
-            
-            document.getElementById('modalMessage').innerText = msg;
-            document.getElementById('successModal').classList.remove('hidden');
-            document.getElementById('unifiedForm').reset();
-            toggleFormFields();
-        }
-
-        function closeModal() {
-            document.getElementById('successModal').classList.add('hidden');
-            switchTab('beranda');
-        }
-    </script>
+    function hapusSemuaRencana() { if(confirm("Hapus Semua Master?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
+    function hapusData(i) { if(confirm("Hapus data riwayat ini?")) { dataLaporan.splice(i,1); localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan)); tampilkanData(); } }
+    function exportToExcel() {
+        const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Cloud'})));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+        XLSX.writeFile(wb, `Laporan_Kolektor_${new Date().toLocaleDateString()}.xlsx`);
+    }
+</script>
 </body>
 </html>
