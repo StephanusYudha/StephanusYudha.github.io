@@ -159,7 +159,7 @@
 <script>
     const MASTER_PASS = "bkk123";
     // GANTI URL DI BAWAH DENGAN URL WEB APP ANDA
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxB0FVMQ6ORqq9JHI2Cu_KOhNPk9nxkmRYRYiMmNYa1JpNznmXT_iBVzOSnHE5miVo0/exec";
+    const SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbxB0FVMQ6ORqq9JHI2Cu_KOhNPk9nxkmRYRYiMmNYa1JpNznmXT_iBVzOSnHE5miVo0/exec](https://script.google.com/macros/s/AKfycbxsKewJ-nSp0mhd6ZzXbA232yag_CZUKWmYW7JKIgvUgHc7VIQ1DGSqkEmiiuc1tyRs-g/exec)";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
