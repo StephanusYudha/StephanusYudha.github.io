@@ -1,4 +1,3 @@
-
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -72,15 +71,16 @@
         <div class="table-responsive sticky-table border rounded">
             <table class="table table-sm table-striped mb-0">
                 <thead class="table-success small sticky-top">
-    <tr>
-        <th style="width: 25%">Nama</th>
-        <th style="width: 30%">Alamat</th>
-        <th style="width: 15%" class="text-end">OS</th>
-        <th style="width: 15%" class="text-end">Tagihan</th>
-        <th style="width: 10%" class="text-center">Tgl</th>
-        <th style="width: 5%" class="text-center">WA</th>
-    </tr>
-</thead>
+                    <tr>
+                        <th style="width: 25%">Nama</th>
+                        <th style="width: 30%">Alamat</th>
+                        <th style="width: 15%" class="text-end">OS</th>
+                        <th style="width: 15%">Telp</th>
+                        <th style="width: 15%" class="text-end">Tagihan</th>
+                        <th style="width: 10%" class="text-center">Tgl</th>
+                        <th style="width: 5%" class="text-center">WA</th>
+                    </tr>
+                </thead>
                 <tbody id="tbodyMasterExcel" class="small"></tbody>
             </table>
         </div>
@@ -92,7 +92,7 @@
                 <h5 class="fw-bold text-primary mb-3">Laporan Lapangan</h5>
                 <form id="collectionForm">
                     <label class="small fw-bold">Nama Nasabah:</label>
-                    <input type="text" id="namaNasabah" class="form-control mb-2" list="listNasabah" required onchange="autoFillAlamat()">
+                    <input type="text" id="namaNasabah" class="form-control mb-2" list="listNasabah" required oninput="autoFillData()" onchange="autoFillData()">
                     <datalist id="listNasabah"></datalist>
 
                     <label class="small fw-bold">Alamat:</label>
@@ -158,8 +158,7 @@
 
 <script>
     const MASTER_PASS = "bkk123";
-    // GANTI URL DI BAWAH DENGAN URL WEB APP ANDA
-    const SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbxB0FVMQ6ORqq9JHI2Cu_KOhNPk9nxkmRYRYiMmNYa1JpNznmXT_iBVzOSnHE5miVo0/exec](https://script.google.com/macros/s/AKfycbxsKewJ-nSp0mhd6ZzXbA232yag_CZUKWmYW7JKIgvUgHc7VIQ1DGSqkEmiiuc1tyRs-g/exec)";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY1RjytqzRxGBbpXB2s0U28bmk7fiVv1UOAtg_Y0WRmECN5Kag0wNifZ_XI008bUxN/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
@@ -173,11 +172,9 @@
         updateDatalist();
     };
 
-    // --- SINKRONISASI CLOUD ---
     async function tarikMasterCloud() {
         const btn = document.getElementById('btnTarikCloud');
         const originalText = btn.innerHTML;
-        
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
 
@@ -202,7 +199,6 @@
         }
     }
 
-    // --- AUTH ---
     function prosesLogin() {
         const n = document.getElementById('userKolektor').value;
         const p = document.getElementById('passKolektor').value;
@@ -212,11 +208,14 @@
             loginSukses();
         } else { alert("Login Gagal!"); }
     }
+
     function loginSukses() {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('labelPetugas').innerText = "Petugas: " + petugas;
     }
+
     function logout() { localStorage.removeItem('petugas_aktif'); location.reload(); }
+
     function getGPS() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
@@ -225,7 +224,6 @@
         }
     }
 
-    // --- EXCEL & MASTER LOGIC ---
     document.getElementById('importExcel').addEventListener('change', function(e) {
         const file = e.target.files[0];
         const reader = new FileReader();
@@ -303,16 +301,21 @@
         });
     }
 
-    function autoFillAlamat() {
+    function autoFillData() {
         const nama = document.getElementById('namaNasabah').value;
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         const ketemu = master.find(u => u.nama.toLowerCase() === nama.toLowerCase());
-        document.getElementById('alamatNasabah').value = ketemu ? (ketemu.alamat || ketemu.ALAMAT) : "";
+        
+        if (ketemu) {
+            document.getElementById('alamatNasabah').value = ketemu.alamat || "-";
+        } else {
+            document.getElementById('alamatNasabah').value = "";
+        }
     }
 
     function pilihNasabah(nama) {
         document.getElementById('namaNasabah').value = nama;
-        autoFillAlamat();
+        autoFillData();
         window.scrollTo({ top: document.getElementById('collectionForm').offsetTop - 20, behavior: 'smooth' });
     }
 
@@ -320,7 +323,6 @@
         document.getElementById('areaJanjiBayar').style.display = (document.getElementById('statusKunjungan').value === "Janji Bayar") ? "block" : "none";
     }
 
-    // --- FOTO LOGIC ---
     document.getElementById('fotoKunjungan').addEventListener('change', function() {
         const reader = new FileReader();
         reader.onload = e => {
@@ -337,7 +339,6 @@
         reader.readAsDataURL(this.files[0]);
     });
 
-    // --- FORM SUBMIT ---
     document.getElementById('collectionForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSimpan');
@@ -355,22 +356,33 @@
             foto: base64Foto
         };
 
+        // Simpan cadangan ke localStorage agar aman jika offline
         dataLaporan.unshift(entri);
         localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
         tampilkanData();
 
-        btn.disabled = true; btn.innerText = "SINKRON...";
+        btn.disabled = true; 
+        btn.innerText = "SINKRON...";
+
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entri) });
-            document.getElementById('syncStatus').innerHTML = "<span class='text-success fw-bold'>✓ Sinkron Berhasil</span>";
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(entri) 
+            });
+            
+            document.getElementById('syncStatus').innerHTML = "<span class='text-success fw-bold'>✓ Sinkron Berhasil ke Google Sheet</span>";
             this.reset();
             base64Foto = "";
             document.getElementById('preview-foto').style.display = 'none';
             document.getElementById('areaJanjiBayar').style.display = 'none';
         } catch (err) {
+            console.error(err);
             document.getElementById('syncStatus').innerHTML = "<span class='text-danger'>! Gagal Cloud (Tersimpan Lokal)</span>";
         }
-        btn.disabled = false; btn.innerText = "SIMPAN & SINKRON";
+        btn.disabled = false; 
+        btn.innerText = "SIMPAN & SINKRON";
     });
 
     function tampilkanData() {
