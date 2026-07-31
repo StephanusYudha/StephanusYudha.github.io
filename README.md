@@ -27,8 +27,12 @@
         <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" width="70" class="mx-auto mb-3">
         <h4 class="fw-bold">Akses Kolektor</h4>
         <p class="text-muted small">BPR BKK Jateng (Perseroda)</p>
-        <input type="text" id="userKolektor" class="form-control mb-2 text-center" placeholder="Nama Lengkap Petugas">
-        <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password">
+        
+        <select id="userKolektor" class="form-select mb-2 text-center">
+            <option value="" disabled selected>Pilih Nama Petugas...</option>
+        </select>
+        
+        <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password Unik">
         <button onclick="prosesLogin()" class="btn btn-primary w-100 fw-bold">MASUK</button>
     </div>
 </div>
@@ -162,20 +166,40 @@
 </div>
 
 <script>
+    // Database Akun Petugas Lokal (Dapat disesuaikan)
+    const dataPetugas = [
+        { nama: "Yudha Pratama", pass: "bkk2026" },
+        { nama: "Petugas 1", pass: "bkk2026" },
+        { nama: "Kolektor A", pass: "kolektor123" },
+        { nama: "Kolektor B", pass: "kolektor456" }
+    ];
+
     const MASTER_PASS = "bkk123";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY1RjytqzRxGBbpXB2s0U28bmk7fiVv1UOAtg_Y0WRmECN5Kag0wNifZ_XI008bUxN/exec";
+    const SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbxY1RjytqzRxGBbpXB2s0U28bmk7fiVv1UOAtg_Y0WRmECN5Kag0wNifZ_XI008bUxN/exec](https://script.google.com/macros/s/AKfycbxEl8rPln6X8IXEBx91Ki_FC1Fu1zatQxDdgGwBSgtD3lsqW3oeuMG02NoW62PI9ldU/exec)";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
     let base64Foto = "";
 
     window.onload = () => {
+        inisialisasiDropdownPetugas();
         if(petugas) loginSukses();
         getGPS();
         tampilkanData();
         tampilkanMasterExcel();
         updateDatalist();
     };
+
+    function inisialisasiDropdownPetugas() {
+        const select = document.getElementById('userKolektor');
+        select.innerHTML = '<option value="" disabled selected>Pilih Nama Petugas...</option>';
+        dataPetugas.forEach(p => {
+            let opt = document.createElement('option');
+            opt.value = p.nama;
+            opt.textContent = p.nama;
+            select.appendChild(opt);
+        });
+    }
 
     async function tarikMasterCloud() {
         const btn = document.getElementById('btnTarikCloud');
@@ -205,13 +229,23 @@
     }
 
     function prosesLogin() {
-        const n = document.getElementById('userKolektor').value;
-        const p = document.getElementById('passKolektor').value;
-        if (n && p === MASTER_PASS) {
-            localStorage.setItem('petugas_aktif', n);
-            petugas = n;
+        const selectedNama = document.getElementById('userKolektor').value;
+        const inputPass = document.getElementById('passKolektor').value;
+
+        if (!selectedNama) {
+            alert("Silakan pilih nama petugas terlebih dahulu!");
+            return;
+        }
+
+        const petugasDitemukan = dataPetugas.find(p => p.nama === selectedNama);
+
+        if (petugasDitemukan && (inputPass === petugasDitemukan.pass || inputPass === MASTER_PASS)) {
+            localStorage.setItem('petugas_aktif', selectedNama);
+            petugas = selectedNama;
             loginSukses();
-        } else { alert("Login Gagal! Periksa kembali nama dan password."); }
+        } else {
+            alert("Password salah untuk petugas " + selectedNama + "!");
+        }
     }
 
     function loginSukses() {
@@ -219,7 +253,10 @@
         document.getElementById('labelPetugas').innerText = "Petugas: " + petugas;
     }
 
-    function logout() { localStorage.removeItem('petugas_aktif'); location.reload(); }
+    function logout() { 
+        localStorage.removeItem('petugas_aktif'); 
+        location.reload(); 
+    }
 
     function getGPS() {
         if (navigator.geolocation) {
@@ -227,7 +264,7 @@
                 document.getElementById('lokasiGps').value = `${pos.coords.latitude},${pos.coords.longitude}`;
             }, err => {
                 console.warn("GPS Warning:", err.message);
-                document.getElementById('lokasiGps').value = "-6.9666,110.4166"; // Default fallback
+                document.getElementById('lokasiGps').value = "-6.9666,110.4166";
             });
         }
     }
@@ -351,7 +388,6 @@
         e.preventDefault();
         const btn = document.getElementById('btnSimpan');
         
-        // Refresh GPS tepat sebelum submit
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 document.getElementById('lokasiGps').value = `${pos.coords.latitude},${pos.coords.longitude}`;
@@ -411,7 +447,7 @@
                 const row = table.insertRow();
                 row.innerHTML = `
                     <td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
-                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu}</small></td>
+                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small></td>
                     <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
                     <td><button onclick="hapusData(${i})" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></td>
                 `;
