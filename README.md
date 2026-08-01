@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -29,7 +28,7 @@
         <p class="text-muted small">BPR BKK Jateng (Perseroda)</p>
         
         <select id="userKolektor" class="form-select mb-2 text-center">
-            <option value="" disabled selected>Pilih Nama Petugas...</option>
+            <option value="" disabled selected>Memuat Petugas...</option>
         </select>
         
         <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password Unik">
@@ -52,28 +51,24 @@
 <div class="container-fluid">
     <div class="card p-3 mb-4 border-success">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold text-success mb-0"><i class="bi bi-database-check"></i> Data Master Rencana Kunjungan</h6>
+            <h6 class="fw-bold text-success mb-0"><i class="bi bi-database-check"></i> Rencana Kunjungan Anda</h6>
             <button onclick="tarikMasterCloud()" id="btnTarikCloud" class="btn btn-sm btn-success fw-bold">
                 <i class="bi bi-cloud-download"></i> TARIK DATA PUSAT
             </button>
         </div>
         
         <div class="row g-2 mb-3">
-            <div class="col-md-3">
-                <label class="small fw-bold">Import Excel:</label>
-                <input type="file" id="importExcel" class="form-control form-control-sm border-success" accept=".xlsx, .xls">
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <label class="small fw-bold">Cari Nama/Alamat:</label>
-                <input type="text" id="searchMaster" class="form-control form-control-sm" placeholder="Ketik..." onkeyup="tampilkanMasterExcel()">
+                <input type="text" id="searchMaster" class="form-control form-control-sm" placeholder="Ketik nama nasabah atau alamat..." onkeyup="tampilkanMasterExcel()">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="small fw-bold">Filter Tanggal:</label>
                 <input type="date" id="filterTglMaster" class="form-control form-control-sm" onchange="tampilkanMasterExcel()">
             </div>
-            <div class="col-md-3 text-end">
+            <div class="col-md-2 text-end">
                 <label class="d-none d-md-block">&nbsp;</label>
-                <button onclick="hapusSemuaRencana()" class="btn btn-sm btn-danger w-100 fw-bold">HAPUS MASTER</button>
+                <button onclick="hapusSemuaRencana()" class="btn btn-sm btn-danger w-100 fw-bold">BERSIHKAN CACHE</button>
             </div>
         </div>
 
@@ -122,6 +117,11 @@
                         <option value="Rumah Kosong">Rumah Kosong</option>
                     </select>
 
+                    <div id="areaNominal" class="mb-3 p-2 border border-primary rounded shadow-sm" style="display: none;">
+                        <label id="labelNominal" class="small fw-bold text-primary">NOMINAL (RP):</label>
+                        <input type="text" id="nominalUang" class="form-control form-control-sm" placeholder="Contoh: 500.000" onkeyup="formatRupiah(this)">
+                    </div>
+
                     <div id="areaJanjiBayar" class="mb-3 p-2 border border-danger rounded shadow-sm" style="display: none;">
                         <label class="small fw-bold text-danger">TANGGAL JANJI BAYAR:</label>
                         <input type="date" id="tglJanjiBayar" class="form-control form-control-sm">
@@ -155,7 +155,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-hover border">
                         <thead class="table-dark small">
-                            <tr><th>Foto</th><th>Nasabah</th><th>Status</th><th>Aksi</th></tr>
+                            <tr><th>Foto</th><th>Nasabah</th><th>Status</th></tr>
                         </thead>
                         <tbody id="tbodyLaporan" class="small"></tbody>
                     </table>
@@ -166,31 +166,27 @@
 </div>
 
 <script>
-    // Database Akun Petugas Lokal (Dapat disesuaikan)
-    const dataPetugas = [
-        { nama: "Yudha Pratama", pass: "bkk2026" },
-        { nama: "Petugas 1", pass: "bkk2026" },
-        { nama: "Kolektor A", pass: "kolektor123" },
-        { nama: "Kolektor B", pass: "kolektor456" }
-    ];
-
     const MASTER_PASS = "bkk123";
-    const SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbxY1RjytqzRxGBbpXB2s0U28bmk7fiVv1UOAtg_Y0WRmECN5Kag0wNifZ_XI008bUxN/exec](https://script.google.com/macros/s/AKfycbxEl8rPln6X8IXEBx91Ki_FC1Fu1zatQxDdgGwBSgtD3lsqW3oeuMG02NoW62PI9ldU/exec)";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyD0r8VuQ83xGidp5rht83VT_tBNF7npYyGjqcoWK6N812-_s_Mb1EoFxszkaEHG3MbJw/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
+    let dataPetugas = JSON.parse(localStorage.getItem('data_petugas_cache')) || [];
     let base64Foto = "";
 
-    window.onload = () => {
-        inisialisasiDropdownPetugas();
-        if(petugas) loginSukses();
+    window.onload = async () => {
+        if(petugas) {
+            loginSukses();
+        } else {
+            document.getElementById('loginOverlay').style.display = 'flex';
+        }
+        
+        await tarikMasterCloud();
         getGPS();
         tampilkanData();
-        tampilkanMasterExcel();
-        updateDatalist();
     };
 
-    function inisialisasiDropdownPetugas() {
+    function isiDropdownPetugas() {
         const select = document.getElementById('userKolektor');
         select.innerHTML = '<option value="" disabled selected>Pilih Nama Petugas...</option>';
         dataPetugas.forEach(p => {
@@ -203,28 +199,38 @@
 
     async function tarikMasterCloud() {
         const btn = document.getElementById('btnTarikCloud');
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+        if(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Loading...';
+        }
 
         try {
             const response = await fetch(SCRIPT_URL);
-            const dataCloud = await response.json();
+            const resCloud = await response.json();
 
-            if (Array.isArray(dataCloud) && dataCloud.length > 0) {
-                localStorage.setItem('rencana_kunjungan', JSON.stringify(dataCloud));
+            if (resCloud.master && Array.isArray(resCloud.master)) {
+                localStorage.setItem('rencana_kunjungan', JSON.stringify(resCloud.master));
                 tampilkanMasterExcel();
                 updateDatalist();
-                alert("Berhasil menarik " + dataCloud.length + " data dari Cloud!");
-            } else {
-                alert("Data Cloud kosong atau Sheet 'Master' tidak ditemukan.");
             }
+
+            if (resCloud.petugas && Array.isArray(resCloud.petugas) && resCloud.petugas.length > 0) {
+                dataPetugas = resCloud.petugas;
+                localStorage.setItem('data_petugas_cache', JSON.stringify(dataPetugas));
+            }
+
+            isiDropdownPetugas();
         } catch (err) {
-            console.error(err);
-            alert("Gagal koneksi ke Cloud. Periksa internet atau URL Script.");
+            console.error("Gagal koneksi Cloud:", err);
+            if(dataPetugas.length === 0) {
+                dataPetugas = [{ nama: "Yudha Pratama", pass: "bkk2026" }];
+            }
+            isiDropdownPetugas();
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            if(btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-download"></i> TARIK DATA PUSAT';
+            }
         }
     }
 
@@ -251,6 +257,9 @@
     function loginSukses() {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('labelPetugas').innerText = "Petugas: " + petugas;
+        tampilkanMasterExcel();
+        updateDatalist();
+        tampilkanData();
     }
 
     function logout() { 
@@ -269,39 +278,6 @@
         }
     }
 
-    document.getElementById('importExcel').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-            const rencana = [];
-            for (let i = 1; i < rows.length; i++) {
-                if(rows[i][0]) {
-                    rencana.push({
-                        nama: String(rows[i][0]),
-                        alamat: rows[i][1] || "-",
-                        os: rows[i][2] || 0,
-                        telp: rows[i][3] || "-",
-                        tagihan: rows[i][4] || 0,
-                        tanggal: formatTgl(rows[i][5])
-                    });
-                }
-            }
-            localStorage.setItem('rencana_kunjungan', JSON.stringify(rencana));
-            tampilkanMasterExcel();
-            updateDatalist();
-            alert("Master Lokal Berhasil Diupdate dari Excel!");
-        };
-        reader.readAsArrayBuffer(file);
-    });
-
-    function formatTgl(v) {
-        if(v instanceof Date) return v.toISOString().split('T')[0];
-        return String(v);
-    }
-
     function tampilkanMasterExcel() {
         const tbody = document.getElementById('tbodyMasterExcel');
         const search = document.getElementById('searchMaster').value.toLowerCase();
@@ -309,14 +285,16 @@
         const data = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         
         tbody.innerHTML = "";
+        
         const filtered = data.filter(i => {
+            const matchPetugas = i.petugas.toLowerCase() === petugas.toLowerCase();
             const mS = i.nama.toLowerCase().includes(search) || i.alamat.toLowerCase().includes(search);
             const mD = filterTgl ? i.tanggal === filterTgl : true;
-            return mS && mD;
+            return matchPetugas && mS && mD;
         });
 
         if(filtered.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='7' class='text-center py-3'>Data Master Kosong</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='7' class='text-center py-3'>Tidak ada rencana kunjungan untuk Anda. Silakan klik Tarik Data Pusat.</td></tr>";
             return;
         }
 
@@ -339,7 +317,7 @@
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         const dl = document.getElementById('listNasabah');
         dl.innerHTML = "";
-        master.forEach(n => {
+        master.filter(n => n.petugas.toLowerCase() === petugas.toLowerCase()).forEach(n => {
             let opt = document.createElement('option');
             opt.value = n.nama;
             dl.appendChild(opt);
@@ -349,7 +327,7 @@
     function autoFillData() {
         const nama = document.getElementById('namaNasabah').value;
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
-        const ketemu = master.find(u => u.nama.toLowerCase() === nama.toLowerCase());
+        const ketemu = master.find(u => u.petugas.toLowerCase() === petugas.toLowerCase() && u.nama.toLowerCase() === nama.toLowerCase());
         
         if (ketemu) {
             document.getElementById('alamatNasabah').value = ketemu.alamat || "-";
@@ -365,7 +343,44 @@
     }
 
     function cekStatusJanji() {
-        document.getElementById('areaJanjiBayar').style.display = (document.getElementById('statusKunjungan').value === "Janji Bayar") ? "block" : "none";
+        const status = document.getElementById('statusKunjungan').value;
+        const areaJanji = document.getElementById('areaJanjiBayar');
+        const areaNominal = document.getElementById('areaNominal');
+        const labelNominal = document.getElementById('labelNominal');
+        
+        // Atur visibilitas tanggal janji bayar
+        areaJanji.style.display = (status === "Janji Bayar") ? "block" : "none";
+
+        // Atur visibilitas dan label nominal
+        if (status === "Janji Bayar" || status === "Bayar Sebagian" || status === "Titip Angsuran") {
+            areaNominal.style.display = "block";
+            if (status === "Janji Bayar") {
+                labelNominal.innerText = "ESTIMASI NOMINAL JANJI BAYAR (RP):";
+            } else if (status === "Bayar Sebagian") {
+                labelNominal.innerText = "NOMINAL PEMBAYARAN SEBAGIAN (RP):";
+            } else if (status === "Titip Angsuran") {
+                labelNominal.innerText = "NOMINAL TITIP ANGSURAN (RP):";
+            }
+        } else {
+            areaNominal.style.display = "none";
+            document.getElementById('nominalUang').value = "";
+        }
+    }
+
+    function formatRupiah(input) {
+        let value = input.value.replace(/[^,\d]/g, '').toString();
+        let split = value.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        input.value = rupiah;
     }
 
     document.getElementById('fotoKunjungan').addEventListener('change', function() {
@@ -401,6 +416,7 @@
             alamat: document.getElementById('alamatNasabah').value,
             bertemu: document.getElementById('bertemuDengan').value,
             status: document.getElementById('statusKunjungan').value,
+            nominal: document.getElementById('nominalUang').value || "0",
             janji_bayar: document.getElementById('tglJanjiBayar').value || "-",
             hasil: document.getElementById('hasilKunjungan').value,
             solusi: document.getElementById('detailSolusi').value,
@@ -428,6 +444,7 @@
             base64Foto = "";
             document.getElementById('preview-foto').style.display = 'none';
             document.getElementById('areaJanjiBayar').style.display = 'none';
+            document.getElementById('areaNominal').style.display = 'none';
         } catch (err) {
             console.error(err);
             document.getElementById('syncStatus').innerHTML = "<span class='text-danger'>! Gagal Cloud (Tersimpan Lokal)</span>";
@@ -440,16 +457,17 @@
         const table = document.getElementById('tbodyLaporan');
         const search = document.getElementById('cariLaporan').value.toLowerCase();
         table.innerHTML = ""; let cb = 0;
-        dataLaporan.forEach((item, i) => {
+        
+        dataLaporan.forEach((item) => {
             if (item.nama.toLowerCase().includes(search)) {
                 const isB = item.status.match(/Bayar|Titip/);
                 if(isB) cb++;
                 const row = table.insertRow();
+                let infoNominal = (item.nominal && item.nominal !== "0") ? `<br><small class="text-primary fw-bold">Nominal: Rp ${item.nominal}</small>` : "";
                 row.innerHTML = `
                     <td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
-                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small></td>
+                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small>${infoNominal}</td>
                     <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
-                    <td><button onclick="hapusData(${i})" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></td>
                 `;
             }
         });
@@ -458,13 +476,12 @@
         document.getElementById('countPending').innerText = dataLaporan.length - cb;
     }
 
-    function hapusSemuaRencana() { if(confirm("Hapus Semua Master Rencana?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
-    function hapusData(i) { if(confirm("Hapus data riwayat ini?")) { dataLaporan.splice(i,1); localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan)); tampilkanData(); } }
+    function hapusSemuaRencana() { if(confirm("Bersihkan cache lokal rencana kunjungan?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
     function exportToExcel() {
         const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Cloud'})));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-        XLSX.writeFile(wb, `Laporan_Kolektor_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.writeFile(wb, `Laporan_Kolektor_${petugas}_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 </body>
