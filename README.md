@@ -17,6 +17,12 @@
         .img-table { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; }
         .rekap-box { background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; border-left: 5px solid var(--bkk-gold); }
         .sticky-table { max-height: 350px; overflow-y: auto; }
+        .alarm-badge { animation: pulse-alarm 1.5s infinite; }
+        @keyframes pulse-alarm {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -49,6 +55,29 @@
 </div>
 
 <div class="container-fluid">
+    <!-- PANEL ALARM OTOMATIS JATUH TEMPO & JANJI BAYAR -->
+    <div id="panelAlarmContainer" class="card p-3 mb-4 border-danger bg-light" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold text-danger mb-0"><i class="bi bi-alarm-fill alarm-badge"></i> Peringatan Alarm Jatuh Tempo & Janji Bayar</h6>
+            <span class="badge bg-danger" id="countAlarm">0 Agenda</span>
+        </div>
+        <p class="small text-muted mb-2">Nasabah berikut memiliki jadwal tagihan jatuh tempo hari ini/lewat atau jadwal janji bayar yang memerlukan tindak lanjut:</p>
+        <div class="table-responsive bg-white rounded border" style="max-height: 200px; overflow-y: auto;">
+            <table class="table table-sm table-striped mb-0">
+                <thead class="table-danger small sticky-top">
+                    <tr>
+                        <th>Nasabah</th>
+                        <th>Keterangan / Tenggat</th>
+                        <th class="text-end">Nominal Tagihan</th>
+                        <th>Status / Sumber</th>
+                        <th class="text-center">Aksi / WA</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyAlarm" class="small"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="card p-3 mb-4 border-success">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="fw-bold text-success mb-0"><i class="bi bi-database-check"></i> Rencana Kunjungan Anda</h6>
@@ -105,7 +134,10 @@
                     <select id="bertemuDengan" class="form-select mb-3" required>
                         <option value="" disabled selected>Bertemu Dengan...</option>
                         <option value="Debitur">Debitur</option>
+                        <option value="Suami">Suami</option>
+                        <option value="Istri">Istri</option>
                         <option value="Keluarga">Keluarga</option>
+                        <option value="Tetangga">Tetangga</option>
                         <option value="Tidak Ada Orang">Tidak Ada Orang</option>
                     </select>
 
@@ -127,8 +159,25 @@
                         <input type="date" id="tglJanjiBayar" class="form-control form-control-sm">
                     </div>
 
-                    <textarea id="hasilKunjungan" class="form-control mb-2" rows="2" placeholder="Hasil Kunjungan..." required></textarea>
-                    <textarea id="detailSolusi" class="form-control mb-3" rows="2" placeholder="Rencana RTL / Solusi..." required></textarea>
+                    <select id="hasilKunjungan" class="form-select mb-3" required>
+                        <option value="" disabled selected>Hasil Kunjungan (Kode)...</option>
+                        <option value="PTP">PTP (Janji Bayar)</option>
+                        <option value="HPR">HPR (Hot Prospect)</option>
+                        <option value="ALM">ALM (Almarhum)</option>
+                        <option value="SKT">SKT (Sakit)</option>
+                        <option value="KSS">KSS (Kena Kasus)</option>
+                        <option value="BCN">BCN (Bencana)</option>
+                        <option value="PBD">PBD (Menolak Bayar)</option>
+                        <option value="JJA">JJA (Jual Aset)</option>
+                        <option value="RES">RES (Restruktur)</option>
+                        <option value="SKP">SKP (Skip / Kabur)</option>
+                        <option value="CRA">CRA (Cerai)</option>
+                        <option value="PDH">PDH (Pindah)</option>
+                        <option value="SJA">SJA (Alamat Salah Sejak Awal)</option>
+                        <option value="FRD">FRD (Fraud)</option>
+                    </select> 
+
+                    <textarea id="detailSolusi" class="form-control mb-2" rows="2" placeholder="Keterangan / Solusi..." required></textarea>
                     
                     <input type="file" id="fotoKunjungan" class="form-control form-control-sm mb-2" accept="image/*" capture="camera" required>
                     <img id="preview-foto" class="mx-auto d-block mb-3">
@@ -166,8 +215,7 @@
 </div>
 
 <script>
-    const MASTER_PASS = "bkk123";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyD0r8VuQ83xGidp5rht83VT_tBNF7npYyGjqcoWK6N812-_s_Mb1EoFxszkaEHG3MbJw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjcmatVrXucJ56yHHwrSQOkVUEKk0VuPM2mX0OiSetTtSMqXSCYcVafyrWDRC91dbj/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
@@ -184,6 +232,7 @@
         await tarikMasterCloud();
         getGPS();
         tampilkanData();
+        cekAlarmJanjiBayar();
     };
 
     function isiDropdownPetugas() {
@@ -243,11 +292,11 @@
             return;
         }
 
-        const petugasDitemukan = dataPetugas.find(p => p.nama === selectedNama);
+        const petugasDitemukan = dataPetugas.find(p => p.nama.toLowerCase() === selectedNama.toLowerCase());
 
-        if (petugasDitemukan && (inputPass === petugasDitemukan.pass || inputPass === MASTER_PASS)) {
-            localStorage.setItem('petugas_aktif', selectedNama);
-            petugas = selectedNama;
+        if (petugasDitemukan && inputPass === petugasDitemukan.pass.toString()) {
+            localStorage.setItem('petugas_aktif', petugasDitemukan.nama);
+            petugas = petugasDitemukan.nama;
             loginSukses();
         } else {
             alert("Password salah untuk petugas " + selectedNama + "!");
@@ -260,6 +309,7 @@
         tampilkanMasterExcel();
         updateDatalist();
         tampilkanData();
+        cekAlarmJanjiBayar();
     }
 
     function logout() { 
@@ -348,10 +398,8 @@
         const areaNominal = document.getElementById('areaNominal');
         const labelNominal = document.getElementById('labelNominal');
         
-        // Atur visibilitas tanggal janji bayar
         areaJanji.style.display = (status === "Janji Bayar") ? "block" : "none";
 
-        // Atur visibilitas dan label nominal
         if (status === "Janji Bayar" || status === "Bayar Sebagian" || status === "Titip Angsuran") {
             areaNominal.style.display = "block";
             if (status === "Janji Bayar") {
@@ -381,6 +429,93 @@
 
         rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
         input.value = rupiah;
+    }
+
+    // --- SISTEM ALARM OTOMATIS: JATUH TEMPO & JANJI BAYAR ---
+    function cekAlarmJanjiBayar() {
+        const panelContainer = document.getElementById('panelAlarmContainer');
+        const tbodyAlarm = document.getElementById('tbodyAlarm');
+        const countAlarm = document.getElementById('countAlarm');
+        
+        tbodyAlarm.innerHTML = "";
+        
+        const todayStr = new Date().toLocaleDateString('en-CA'); 
+        const todayDate = new Date(todayStr);
+        let agendaList = [];
+
+        // 1. Ambil otomatis dari Rencana Kunjungan Pusat (Berdasarkan Tanggal Tagihan / Jatuh Tempo)
+        const masterData = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+        masterData.forEach(m => {
+            if (m.petugas && m.petugas.toLowerCase() === petugas.toLowerCase() && m.tanggal) {
+                const tglTempo = new Date(m.tanggal);
+                const diffTime = tglTempo - todayDate;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // Masuk alarm jika jatuh tempo hari ini (0), H-1, atau sudah lewat (terlambat)
+                if (diffDays <= 1) {
+                    agendaList.push({
+                        nama: m.nama,
+                        tgl: m.tanggal,
+                        diffDays: diffDays,
+                        nominal: m.tagihan || "0",
+                        keterangan: "Jatuh Tempo Tagihan",
+                        telp: m.telp || ""
+                    });
+                }
+            }
+        });
+
+        // 2. Ambil dari riwayat Janji Bayar Laporan Lapangan (PTP)
+        dataLaporan.forEach(item => {
+            if (item.petugas.toLowerCase() === petugas.toLowerCase() && item.status === "Janji Bayar" && item.janji_bayar && item.janji_bayar !== "-") {
+                const janjiDate = new Date(item.janji_bayar);
+                const diffTime = janjiDate - todayDate;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays <= 1) {
+                    // Cek agar tidak duplikat dengan data master jika nama sama
+                    const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
+                    const foundMaster = master.find(m => m.nama.toLowerCase() === item.nama.toLowerCase());
+                    
+                    agendaList.push({
+                        nama: item.nama,
+                        tgl: item.janji_bayar,
+                        diffDays: diffDays,
+                        nominal: item.nominal || "0",
+                        keterangan: "Janji Bayar (PTP)",
+                        telp: foundMaster ? foundMaster.telp : ""
+                    });
+                }
+            }
+        });
+
+        if (agendaList.length > 0) {
+            panelContainer.style.display = "block";
+            countAlarm.innerText = agendaList.length + " Agenda";
+
+            agendaList.forEach(agenda => {
+                const row = tbodyAlarm.insertRow();
+                const wa = agenda.telp ? agenda.telp.toString().replace(/^0/, '62').replace(/\D/g, '') : "";
+                
+                let badgeTime = "";
+                if(agenda.diffDays < 0) badgeTime = `<span class="badge bg-dark text-danger">Terlambat ${Math.abs(agenda.diffDays)} Hari</span>`;
+                else if(agenda.diffDays === 0) badgeTime = `<span class="badge bg-danger">Hari Ini!</span>`;
+                else badgeTime = `<span class="badge bg-warning text-dark">Besok (H-1)</span>`;
+
+                row.innerHTML = `
+                    <td><b>${agenda.nama}</b><br><small class="text-muted">${agenda.keterangan}</small></td>
+                    <td>${agenda.tgl}<br>${badgeTime}</td>
+                    <td class="text-end fw-bold text-danger">Rp ${Number(agenda.nominal).toLocaleString('id-ID')}</td>
+                    <td><span class="badge bg-secondary">${agenda.keterangan}</span></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 mb-1 w-100" onclick="pilihNasabah('${agenda.nama.replace(/'/g, "\\'")}')" title="Kunjungi">Kunjungi</button>
+                        ${wa ? `<a href="https://wa.me/${wa}?text=Halo\%20Bapak/Ibu\%20${encodeURIComponent(agenda.nama)},%20kami%20mengingatkan%20perihal%20kewajiban%20angsuran%20di%20BPR%20BKK%20Jateng." target="_blank" class="btn btn-sm btn-success py-0 w-100"><i class="bi bi-whatsapp"></i> Chat WA</a>` : ''}
+                    </td>
+                `;
+            });
+        } else {
+            panelContainer.style.display = "none";
+        }
     }
 
     document.getElementById('fotoKunjungan').addEventListener('change', function() {
@@ -427,6 +562,7 @@
         dataLaporan.unshift(entri);
         localStorage.setItem('laporan_bkk', JSON.stringify(dataLaporan));
         tampilkanData();
+        cekAlarmJanjiBayar();
 
         btn.disabled = true; 
         btn.innerText = "SINKRON...";
@@ -464,9 +600,10 @@
                 if(isB) cb++;
                 const row = table.insertRow();
                 let infoNominal = (item.nominal && item.nominal !== "0") ? `<br><small class="text-primary fw-bold">Nominal: Rp ${item.nominal}</small>` : "";
+                let infoJanji = (item.janji_bayar && item.janji_bayar !== "-") ? `<br><small class="text-danger">Janji Bayar: ${item.janji_bayar}</small>` : "";
                 row.innerHTML = `
                     <td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
-                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small>${infoNominal}</td>
+                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small>${infoNominal}${infoJanji}</td>
                     <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
                 `;
             }
