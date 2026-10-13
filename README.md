@@ -236,7 +236,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwFOF7ZxoKTIpbB72Lnb-f9COQV3bsnCk0BT1XLZo7BCogJCaJDrwkQFs68WF4ax344/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwml8YH0zJWXT1YXCUZGNwobSFPJTeBjIc4qtmUR-orJ7WTx_lgtZHVSzeVXBr0yDL1/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
@@ -261,13 +261,15 @@
         const selectCabang = document.getElementById('userCabang');
         selectCabang.innerHTML = '<option value="" disabled selected>Pilih Kantor Cabang...</option>';
         
-        const listCabang = [...new Set(dataPetugas.map(p => p.cabang))];
+        const listCabang = [...new Set(dataPetugas.map(p => p.cabang || p.Cabang))];
         
         listCabang.forEach(c => {
-            let opt = document.createElement('option');
-            opt.value = c;
-            opt.textContent = c;
-            selectCabang.appendChild(opt);
+            if(c) {
+                let opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                selectCabang.appendChild(opt);
+            }
         });
 
         if(cabang) {
@@ -286,13 +288,16 @@
         selectPetugas.innerHTML = '<option value="" disabled selected>Pilih Nama Petugas...</option>';
         selectPetugas.disabled = false;
         
-        const filteredPetugas = dataPetugas.filter(p => p.cabang.toLowerCase() === selectedCabang.toLowerCase());
+        const filteredPetugas = dataPetugas.filter(p => (p.cabang || p.Cabang || "").toLowerCase() === selectedCabang.toLowerCase());
         
         filteredPetugas.forEach(p => {
-            let opt = document.createElement('option');
-            opt.value = p.nama;
-            opt.textContent = p.nama;
-            selectPetugas.appendChild(opt);
+            let namaP = p.nama || p.Nama;
+            if(namaP) {
+                let opt = document.createElement('option');
+                opt.value = namaP;
+                opt.textContent = namaP;
+                selectPetugas.appendChild(opt);
+            }
         });
     }
 
@@ -344,15 +349,17 @@
         }
 
         const petugasDitemukan = dataPetugas.find(
-            p => p.cabang.toLowerCase() === selectedCabang.toLowerCase() && 
-                 p.nama.toLowerCase() === selectedNama.toLowerCase()
+            p => (p.cabang || p.Cabang || "").toLowerCase() === selectedCabang.toLowerCase() && 
+                 (p.nama || p.Nama || "").toLowerCase() === selectedNama.toLowerCase()
         );
 
-        if (petugasDitemukan && inputPass === petugasDitemukan.pass.toString()) {
-            localStorage.setItem('cabang_aktif', petugasDitemukan.cabang);
-            localStorage.setItem('petugas_aktif', petugasDitemukan.nama);
-            cabang = petugasDitemukan.cabang;
-            petugas = petugasDitemukan.nama;
+        let passTarget = petugasDitemukan ? (petugasDitemukan.pass || petugasDitemukan.Pass || "") : "";
+
+        if (petugasDitemukan && inputPass === passTarget.toString()) {
+            localStorage.setItem('cabang_aktif', (petugasDitemukan.cabang || petugasDitemukan.Cabang));
+            localStorage.setItem('petugas_aktif', (petugasDitemukan.nama || petugasDitemukan.Nama));
+            cabang = localStorage.getItem('cabang_aktif');
+            petugas = localStorage.getItem('petugas_aktif');
             loginSukses();
         } else {
             alert("Password salah untuk petugas " + selectedNama + "!");
@@ -394,9 +401,14 @@
         tbody.innerHTML = "";
         
         const filtered = data.filter(i => {
-            const matchPetugas = i.petugas.toLowerCase() === petugas.toLowerCase();
-            const mS = i.nama.toLowerCase().includes(search) || i.alamat.toLowerCase().includes(search);
-            const mD = filterTgl ? i.tanggal === filterTgl : true;
+            const pPetugas = i.petugas || i.Petugas || i['nama petugas'] || "";
+            const pNama = i.nama || i.Nama || i['nama nasabah'] || "";
+            const pAlamat = i.alamat || i.Alamat || "";
+            const pTgl = i.tanggal || i.Tanggal || i['tgl tempo'] || "";
+            
+            const matchPetugas = pPetugas.toLowerCase() === petugas.toLowerCase();
+            const mS = pNama.toLowerCase().includes(search) || pAlamat.toLowerCase().includes(search);
+            const mD = filterTgl ? pTgl === filterTgl : true;
             return matchPetugas && mS && mD;
         });
 
@@ -407,15 +419,27 @@
 
         filtered.forEach(item => {
             const row = tbody.insertRow();
-            const wa = item.telp.toString().replace(/^0/, '62').replace(/\D/g, '');
+            const nama = item.nama || item.Nama || item['nama nasabah'] || "-";
+            const alamat = item.alamat || item.Alamat || "-";
+            
+            // Deteksi berbagai kemungkinan nama kolom OS & Tagihan
+            const rawOs = item.os || item.OS || item.Os || item['sisa os'] || item.plafon || 0;
+            const telp = item.telp || item.Telp || item['no telp'] || "-";
+            const rawTagihan = item.tagihan || item.Tagihan || item['jumlah tagihan'] || item.nominal || 0;
+            const tanggal = item.tanggal || item.Tanggal || item['tgl tempo'] || "-";
+            
+            const osVal = Number(String(rawOs).replace(/[^0-9.-]+/g,"")) || 0;
+            const tagihanVal = Number(String(rawTagihan).replace(/[^0-9.-]+/g,"")) || 0;
+            const wa = telp.toString().replace(/^0/, '62').replace(/\D/g, '');
+
             row.innerHTML = `
-                <td><button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="pilihNasabah('${item.nama.replace(/'/g, "\\'")}')">${item.nama}</button></td>
-                <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${item.alamat}</td>
-                <td class="text-end">${Number(item.os).toLocaleString('id-ID')}</td>
-                <td>${item.telp}</td>
-                <td class="text-end fw-bold text-danger">${Number(item.tagihan).toLocaleString('id-ID')}</td>
-                <td><span class="badge bg-secondary">${item.tanggal}</span></td>
-                <td><a href="https://wa.me/${wa}" target="_blank" class="text-success"><i class="bi bi-whatsapp"></i></a></td>
+                <td><button type="button" class="btn btn-sm btn-outline-primary py-0" onclick="pilihNasabah('${nama.replace(/'/g, "\\'")}')">${nama}</button></td>
+                <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${alamat}</td>
+                <td class="text-end">${osVal.toLocaleString('id-ID')}</td>
+                <td>${telp}</td>
+                <td class="text-end fw-bold text-danger">${tagihanVal.toLocaleString('id-ID')}</td>
+                <td><span class="badge bg-secondary">${tanggal}</span></td>
+                <td>${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="text-success"><i class="bi bi-whatsapp"></i></a>` : ''}</td>
             `;
         });
     }
@@ -424,9 +448,9 @@
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         const dl = document.getElementById('listNasabah');
         dl.innerHTML = "";
-        master.filter(n => n.petugas.toLowerCase() === petugas.toLowerCase()).forEach(n => {
+        master.filter(n => (n.petugas || n.Petugas || "").toLowerCase() === petugas.toLowerCase()).forEach(n => {
             let opt = document.createElement('option');
-            opt.value = n.nama;
+            opt.value = n.nama || n.Nama;
             dl.appendChild(opt);
         });
     }
@@ -434,10 +458,10 @@
     function autoFillData() {
         const nama = document.getElementById('namaNasabah').value;
         const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
-        const ketemu = master.find(u => u.petugas.toLowerCase() === petugas.toLowerCase() && u.nama.toLowerCase() === nama.toLowerCase());
+        const ketemu = master.find(u => (u.petugas || u.Petugas || "").toLowerCase() === petugas.toLowerCase() && (u.nama || u.Nama || "").toLowerCase() === nama.toLowerCase());
         
         if (ketemu) {
-            document.getElementById('alamatNasabah').value = ketemu.alamat || "-";
+            document.getElementById('alamatNasabah').value = ketemu.alamat || ketemu.Alamat || "-";
         } else {
             document.getElementById('alamatNasabah').value = "";
         }
@@ -502,19 +526,25 @@
 
         const masterData = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         masterData.forEach(m => {
-            if (m.petugas && m.petugas.toLowerCase() === petugas.toLowerCase() && m.tanggal) {
-                const tglTempo = new Date(m.tanggal);
+            const mPetugas = m.petugas || m.Petugas || "";
+            const mTanggal = m.tanggal || m.Tanggal || "";
+            const mNama = m.nama || m.Nama || "";
+            const mTagihan = m.tagihan || m.Tagihan || 0;
+            const mTelp = m.telp || m.Telp || "";
+
+            if (mPetugas && mPetugas.toLowerCase() === petugas.toLowerCase() && mTanggal) {
+                const tglTempo = new Date(mTanggal);
                 const diffTime = tglTempo - todayDate;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 if (diffDays <= 1) {
                     agendaList.push({
-                        nama: m.nama,
-                        tgl: m.tanggal,
+                        nama: mNama,
+                        tgl: mTanggal,
                         diffDays: diffDays,
-                        nominal: m.tagihan || "0",
+                        nominal: mTagihan,
                         keterangan: "Jatuh Tempo Tagihan",
-                        telp: m.telp || ""
+                        telp: mTelp
                     });
                 }
             }
@@ -528,7 +558,7 @@
 
                 if (diffDays <= 1) {
                     const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
-                    const foundMaster = master.find(m => m.nama.toLowerCase() === item.nama.toLowerCase());
+                    const foundMaster = master.find(m => (m.nama || m.Nama || "").toLowerCase() === item.nama.toLowerCase());
                     
                     agendaList.push({
                         nama: item.nama,
@@ -536,7 +566,7 @@
                         diffDays: diffDays,
                         nominal: item.nominal || "0",
                         keterangan: "Janji Bayar (PTP)",
-                        telp: foundMaster ? foundMaster.telp : ""
+                        telp: foundMaster ? (foundMaster.telp || foundMaster.Telp || "") : ""
                     });
                 }
             }
@@ -555,10 +585,12 @@
                 else if(agenda.diffDays === 0) badgeTime = `<span class="badge bg-danger">Hari Ini!</span>`;
                 else badgeTime = `<span class="badge bg-warning text-dark">Besok (H-1)</span>`;
 
+                const nomVal = Number(String(agenda.nominal).replace(/[^0-9.-]+/g,"")) || 0;
+
                 row.innerHTML = `
                     <td><b>${agenda.nama}</b><br><small class="text-muted">${agenda.keterangan}</small></td>
                     <td>${agenda.tgl}<br>${badgeTime}</td>
-                    <td class="text-end fw-bold text-danger">Rp ${Number(agenda.nominal).toLocaleString('id-ID')}</td>
+                    <td class="text-end fw-bold text-danger">Rp ${nomVal.toLocaleString('id-ID')}</td>
                     <td><span class="badge bg-secondary">${agenda.keterangan}</span></td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-outline-primary py-0 mb-1 w-100" onclick="pilihNasabah('${agenda.nama.replace(/'/g, "\\'")}')" title="Kunjungi">Kunjungi</button>
@@ -648,51 +680,82 @@
         const search = document.getElementById('cariLaporan').value.toLowerCase();
         const filterStatus = document.getElementById('filterStatusLaporan').value;
         
-        table.innerHTML = ""; 
-        let cb = 0;
+        table.innerHTML = "";
         
-        dataLaporan.forEach((item) => {
-            const matchSearch = item.nama.toLowerCase().includes(search) || 
-                                item.solusi.toLowerCase().includes(search) || 
-                                item.petugas.toLowerCase().includes(search);
-            
+        const filteredData = dataLaporan.filter(item => {
+            const matchPetugas = item.petugas.toLowerCase() === petugas.toLowerCase();
+            const matchSearch = item.nama.toLowerCase().includes(search) || item.solusi.toLowerCase().includes(search);
             const matchStatus = filterStatus ? item.status === filterStatus : true;
-
-            if (matchSearch && matchStatus) {
-                const isB = item.status.match(/Bayar|Titip/);
-                if(isB) cb++;
-                
-                const row = table.insertRow();
-                let infoNominal = (item.nominal && item.nominal !== "0") ? `<br><small class="text-primary fw-bold">Nominal: Rp ${item.nominal}</small>` : "";
-                let infoJanji = (item.janji_bayar && item.janji_bayar !== "-") ? `<br><small class="text-danger">Janji Bayar: ${item.janji_bayar}</small>` : "";
-                let infoSolusi = item.solusi ? `<br><small class="text-muted">Catatan: ${item.solusi}</small>` : "";
-
-                row.innerHTML = `
-                    <td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
-                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small>${infoNominal}${infoJanji}${infoSolusi}</td>
-                    <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
-                `;
-            }
+            return matchPetugas && matchSearch && matchStatus;
         });
-        document.getElementById('countTotal').innerText = dataLaporan.length;
-        document.getElementById('countBayar').innerText = cb;
-        document.getElementById('countPending').innerText = dataLaporan.length - cb;
+
+        let total = filteredData.length;
+        let bayar = filteredData.filter(i => i.status === "Bayar Sebagian" || i.status === "Titip Angsuran").length;
+        let pending = filteredData.filter(i => i.status === "Janji Bayar" || i.status === "Rumah Kosong").length;
+
+        document.getElementById('countTotal').innerText = total;
+        document.getElementById('countBayar').innerText = bayar;
+        document.getElementById('countPending').innerText = pending;
+
+        if (filteredData.length === 0) {
+            table.innerHTML = "<tr><td colspan='3' class='text-center text-muted py-3'>Belum ada riwayat laporan kunjungan.</td></tr>";
+            return;
+        }
+
+        filteredData.forEach((item, index) => {
+            const row = table.insertRow();
+            let badgeClass = "bg-secondary";
+            if (item.status === "Janji Bayar") badgeClass = "bg-danger";
+            else if (item.status === "Bayar Sebagian") badgeClass = "bg-success";
+            else if (item.status === "Titip Angsuran") badgeClass = "bg-primary";
+            else if (item.status === "Rumah Kosong") badgeClass = "bg-warning text-dark";
+
+            row.innerHTML = `
+                <td style="width: 60px;">
+                    ${item.foto ? `<img src="${item.foto}" class="img-table" onclick="modalFoto('${item.foto}')">` : '<span class="small text-muted">No Foto</span>'}
+                </td>
+                <td>
+                    <div class="fw-bold">${item.nama}</div>
+                    <small class="text-muted"><i class="bi bi-clock"></i> ${item.waktu}</small><br>
+                    <small class="text-primary">${item.solusi}</small>
+                </td>
+                <td class="text-end">
+                    <span class="badge ${badgeClass}">${item.status}</span><br>
+                    ${item.nominal && item.nominal !== "0" ? `<small class="fw-bold text-success">Rp ${item.nominal}</small>` : ''}
+                </td>
+            `;
+        });
     }
 
-    function hapusSemuaRencana() { 
-        if(confirm("Bersihkan cache lokal rencana kunjungan?")) { 
-            localStorage.removeItem('rencana_kunjungan'); 
-            tampilkanMasterExcel(); 
-            updateDatalist(); 
-        } 
+    function modalFoto(src) {
+        const w = window.open("");
+        w.document.write(`<img src="${src}" style="max-width:100%; height:auto;" />`);
+    }
+
+    function hapusSemuaRencana() {
+        if(confirm("Yakin ingin membersihkan cache rencana kunjungan dan data lokal?")) {
+            localStorage.removeItem('rencana_kunjungan');
+            localStorage.removeItem('laporan_bkk');
+            dataLaporan = [];
+            tampilkanMasterExcel();
+            updateDatalist();
+            tampilkanData();
+            cekAlarmJanjiBayar();
+            alert("Cache berhasil dibersihkan!");
+        }
     }
 
     function exportToExcel() {
-        const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Cloud'})));
+        if(dataLaporan.length === 0) {
+            alert("Tidak ada data laporan untuk diexport!");
+            return;
+        }
+        const ws = XLSX.utils.json_to_sheet(dataLaporan);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-        XLSX.writeFile(wb, `Laporan_Kolektor_${cabang}_${petugas}_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan Kolektor");
+        XLSX.writeFile(wb, `Laporan_Collection_${petugas}_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 </script>
+
 </body>
 </html>
