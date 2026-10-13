@@ -236,7 +236,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwml8YH0zJWXT1YXCUZGNwobSFPJTeBjIc4qtmUR-orJ7WTx_lgtZHVSzeVXBr0yDL1/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKAd7sS2WxJ4BBmlenVViUdP-C4RzNntQyI6qCDEhv5l-q6lKYlbcz-Wy5Qo8sF5Bm/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
