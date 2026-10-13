@@ -28,13 +28,19 @@
 <body>
 
 <div id="loginOverlay">
-    <div class="card p-4 text-center shadow-lg" style="max-width: 350px; width: 90%;">
+    <div class="card p-4 text-center shadow-lg" style="max-width: 380px; width: 90%;">
         <img src="https://bankbanjarharjo.id/assets/upload/images/logo.png" width="70" class="mx-auto mb-3">
         <h4 class="fw-bold">Akses Kolektor</h4>
         <p class="text-muted small">BPR BKK Jateng (Perseroda)</p>
         
-        <select id="userKolektor" class="form-select mb-2 text-center">
-            <option value="" disabled selected>Memuat Petugas...</option>
+        <!-- PILIH CABANG -->
+        <select id="userCabang" class="form-select mb-2 text-center" onchange="filterPetugasByCabang()">
+            <option value="" disabled selected>Memuat Cabang...</option>
+        </select>
+
+        <!-- PILIH PETUGAS -->
+        <select id="userKolektor" class="form-select mb-2 text-center" disabled>
+            <option value="" disabled selected>Pilih Cabang Dulu...</option>
         </select>
         
         <input type="password" id="passKolektor" class="form-control mb-3 text-center" placeholder="Password Unik">
@@ -215,15 +221,16 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjcmatVrXucJ56yHHwrSQOkVUEKk0VuPM2mX0OiSetTtSMqXSCYcVafyrWDRC91dbj/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw12p9hKQNAMclmqhKFFIWbqXmIxEDTLki3_mEiAAWCcZTHRO88EHbCgj1LdviTfaS0/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
+    let cabang = localStorage.getItem('cabang_aktif') || "";
     let dataPetugas = JSON.parse(localStorage.getItem('data_petugas_cache')) || [];
     let base64Foto = "";
 
     window.onload = async () => {
-        if(petugas) {
+        if(petugas && cabang) {
             loginSukses();
         } else {
             document.getElementById('loginOverlay').style.display = 'flex';
@@ -236,13 +243,43 @@
     };
 
     function isiDropdownPetugas() {
-        const select = document.getElementById('userKolektor');
-        select.innerHTML = '<option value="" disabled selected>Pilih Nama Petugas...</option>';
-        dataPetugas.forEach(p => {
+        const selectCabang = document.getElementById('userCabang');
+        selectCabang.innerHTML = '<option value="" disabled selected>Pilih Kantor Cabang...</option>';
+        
+        // Ambil daftar cabang unik dari data petugas
+        const listCabang = [...new Set(dataPetugas.map(p => p.cabang))];
+        
+        listCabang.forEach(c => {
+            let opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            selectCabang.appendChild(opt);
+        });
+
+        // Jika cache cabang sudah tersimpan sebelumnya (misal saat reload), set ulang
+        if(cabang) {
+            selectCabang.value = cabang;
+            filterPetugasByCabang();
+            if(petugas) {
+                document.getElementById('userKolektor').value = petugas;
+            }
+        }
+    }
+
+    function filterPetugasByCabang() {
+        const selectedCabang = document.getElementById('userCabang').value;
+        const selectPetugas = document.getElementById('userKolektor');
+        
+        selectPetugas.innerHTML = '<option value="" disabled selected>Pilih Nama Petugas...</option>';
+        selectPetugas.disabled = false;
+        
+        const filteredPetugas = dataPetugas.filter(p => p.cabang.toLowerCase() === selectedCabang.toLowerCase());
+        
+        filteredPetugas.forEach(p => {
             let opt = document.createElement('option');
             opt.value = p.nama;
             opt.textContent = p.nama;
-            select.appendChild(opt);
+            selectPetugas.appendChild(opt);
         });
     }
 
@@ -272,7 +309,7 @@
         } catch (err) {
             console.error("Gagal koneksi Cloud:", err);
             if(dataPetugas.length === 0) {
-                dataPetugas = [{ nama: "Yudha Pratama", pass: "bkk2026" }];
+                dataPetugas = [{ cabang: "KCU Utama", nama: "Yudha Pratama", pass: "bkk2026" }];
             }
             isiDropdownPetugas();
         } finally {
@@ -284,18 +321,24 @@
     }
 
     function prosesLogin() {
+        const selectedCabang = document.getElementById('userCabang').value;
         const selectedNama = document.getElementById('userKolektor').value;
         const inputPass = document.getElementById('passKolektor').value;
 
-        if (!selectedNama) {
-            alert("Silakan pilih nama petugas terlebih dahulu!");
+        if (!selectedCabang || !selectedNama) {
+            alert("Silakan pilih Cabang dan Nama Petugas terlebih dahulu!");
             return;
         }
 
-        const petugasDitemukan = dataPetugas.find(p => p.nama.toLowerCase() === selectedNama.toLowerCase());
+        const petugasDitemukan = dataPetugas.find(
+            p => p.cabang.toLowerCase() === selectedCabang.toLowerCase() && 
+                 p.nama.toLowerCase() === selectedNama.toLowerCase()
+        );
 
         if (petugasDitemukan && inputPass === petugasDitemukan.pass.toString()) {
+            localStorage.setItem('cabang_aktif', petugasDitemukan.cabang);
             localStorage.setItem('petugas_aktif', petugasDitemukan.nama);
+            cabang = petugasDitemukan.cabang;
             petugas = petugasDitemukan.nama;
             loginSukses();
         } else {
@@ -305,7 +348,7 @@
 
     function loginSukses() {
         document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('labelPetugas').innerText = "Petugas: " + petugas;
+        document.getElementById('labelPetugas').innerText = `Cabang: ${cabang} | Petugas: ${petugas}`;
         tampilkanMasterExcel();
         updateDatalist();
         tampilkanData();
@@ -314,6 +357,7 @@
 
     function logout() { 
         localStorage.removeItem('petugas_aktif'); 
+        localStorage.removeItem('cabang_aktif'); 
         location.reload(); 
     }
 
@@ -451,7 +495,6 @@
                 const diffTime = tglTempo - todayDate;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                // Masuk alarm jika jatuh tempo hari ini (0), H-1, atau sudah lewat (terlambat)
                 if (diffDays <= 1) {
                     agendaList.push({
                         nama: m.nama,
@@ -473,7 +516,6 @@
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                 if (diffDays <= 1) {
-                    // Cek agar tidak duplikat dengan data master jika nama sama
                     const master = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
                     const foundMaster = master.find(m => m.nama.toLowerCase() === item.nama.toLowerCase());
                     
@@ -545,6 +587,7 @@
         }
 
         const entri = {
+            cabang: cabang,
             petugas: petugas,
             waktu: new Date().toLocaleString('id-ID'),
             nama: document.getElementById('namaNasabah').value,
@@ -613,12 +656,19 @@
         document.getElementById('countPending').innerText = dataLaporan.length - cb;
     }
 
-    function hapusSemuaRencana() { if(confirm("Bersihkan cache lokal rencana kunjungan?")) { localStorage.removeItem('rencana_kunjungan'); tampilkanMasterExcel(); updateDatalist(); } }
+    function hapusSemuaRencana() { 
+        if(confirm("Bersihkan cache lokal rencana kunjungan?")) { 
+            localStorage.removeItem('rencana_kunjungan'); 
+            tampilkanMasterExcel(); 
+            updateDatalist(); 
+        } 
+    }
+
     function exportToExcel() {
         const ws = XLSX.utils.json_to_sheet(dataLaporan.map(i => ({...i, foto: 'Lihat di Cloud'})));
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-        XLSX.writeFile(wb, `Laporan_Kolektor_${petugas}_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.writeFile(wb, `Laporan_Kolektor_${cabang}_${petugas}_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 </body>
