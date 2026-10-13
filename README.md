@@ -203,10 +203,25 @@
             </div>
 
             <div class="card p-3">
-                <div class="d-flex justify-content-between mb-3">
-                    <input type="text" id="cariLaporan" class="form-control w-50" placeholder="Cari Riwayat..." onkeyup="tampilkanData()">
-                    <button onclick="exportToExcel()" class="btn btn-success btn-sm fw-bold">UNDUH EXCEL</button>
+                <!-- PENCARIAN & FILTER RIWAYAT -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <input type="text" id="cariLaporan" class="form-control form-control-sm" placeholder="Cari Riwayat (Nama/Keterangan)..." onkeyup="tampilkanData()">
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterStatusLaporan" class="form-select form-select-sm" onchange="tampilkanData()">
+                            <option value="">Semua Status</option>
+                            <option value="Janji Bayar">Janji Bayar</option>
+                            <option value="Bayar Sebagian">Bayar Sebagian</option>
+                            <option value="Titip Angsuran">Titip Angsuran</option>
+                            <option value="Rumah Kosong">Rumah Kosong</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button onclick="exportToExcel()" class="btn btn-success btn-sm fw-bold w-100">UNDUH EXCEL</button>
+                    </div>
                 </div>
+
                 <div class="table-responsive">
                     <table class="table table-sm table-hover border">
                         <thead class="table-dark small">
@@ -221,7 +236,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw12p9hKQNAMclmqhKFFIWbqXmIxEDTLki3_mEiAAWCcZTHRO88EHbCgj1LdviTfaS0/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwFOF7ZxoKTIpbB72Lnb-f9COQV3bsnCk0BT1XLZo7BCogJCaJDrwkQFs68WF4ax344/exec";
     
     let dataLaporan = JSON.parse(localStorage.getItem('laporan_bkk')) || [];
     let petugas = localStorage.getItem('petugas_aktif') || "";
@@ -246,7 +261,6 @@
         const selectCabang = document.getElementById('userCabang');
         selectCabang.innerHTML = '<option value="" disabled selected>Pilih Kantor Cabang...</option>';
         
-        // Ambil daftar cabang unik dari data petugas
         const listCabang = [...new Set(dataPetugas.map(p => p.cabang))];
         
         listCabang.forEach(c => {
@@ -256,7 +270,6 @@
             selectCabang.appendChild(opt);
         });
 
-        // Jika cache cabang sudah tersimpan sebelumnya (misal saat reload), set ulang
         if(cabang) {
             selectCabang.value = cabang;
             filterPetugasByCabang();
@@ -487,7 +500,6 @@
         const todayDate = new Date(todayStr);
         let agendaList = [];
 
-        // 1. Ambil otomatis dari Rencana Kunjungan Pusat (Berdasarkan Tanggal Tagihan / Jatuh Tempo)
         const masterData = JSON.parse(localStorage.getItem('rencana_kunjungan')) || [];
         masterData.forEach(m => {
             if (m.petugas && m.petugas.toLowerCase() === petugas.toLowerCase() && m.tanggal) {
@@ -508,7 +520,6 @@
             }
         });
 
-        // 2. Ambil dari riwayat Janji Bayar Laporan Lapangan (PTP)
         dataLaporan.forEach(item => {
             if (item.petugas.toLowerCase() === petugas.toLowerCase() && item.status === "Janji Bayar" && item.janji_bayar && item.janji_bayar !== "-") {
                 const janjiDate = new Date(item.janji_bayar);
@@ -635,18 +646,30 @@
     function tampilkanData() {
         const table = document.getElementById('tbodyLaporan');
         const search = document.getElementById('cariLaporan').value.toLowerCase();
-        table.innerHTML = ""; let cb = 0;
+        const filterStatus = document.getElementById('filterStatusLaporan').value;
+        
+        table.innerHTML = ""; 
+        let cb = 0;
         
         dataLaporan.forEach((item) => {
-            if (item.nama.toLowerCase().includes(search)) {
+            const matchSearch = item.nama.toLowerCase().includes(search) || 
+                                item.solusi.toLowerCase().includes(search) || 
+                                item.petugas.toLowerCase().includes(search);
+            
+            const matchStatus = filterStatus ? item.status === filterStatus : true;
+
+            if (matchSearch && matchStatus) {
                 const isB = item.status.match(/Bayar|Titip/);
                 if(isB) cb++;
+                
                 const row = table.insertRow();
                 let infoNominal = (item.nominal && item.nominal !== "0") ? `<br><small class="text-primary fw-bold">Nominal: Rp ${item.nominal}</small>` : "";
                 let infoJanji = (item.janji_bayar && item.janji_bayar !== "-") ? `<br><small class="text-danger">Janji Bayar: ${item.janji_bayar}</small>` : "";
+                let infoSolusi = item.solusi ? `<br><small class="text-muted">Catatan: ${item.solusi}</small>` : "";
+
                 row.innerHTML = `
                     <td><img src="${item.foto}" class="img-table" onclick="window.open(this.src)"></td>
-                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small>${infoNominal}${infoJanji}</td>
+                    <td><b>${item.nama}</b><br><small class="text-muted">${item.waktu} (${item.petugas})</small>${infoNominal}${infoJanji}${infoSolusi}</td>
                     <td><span class="badge ${isB?'bg-success':'bg-warning text-dark'}">${item.status}</span></td>
                 `;
             }
